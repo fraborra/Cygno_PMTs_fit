@@ -35,7 +35,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     ```
 
 ## run instruction to be added
-<!-
+<!--
 2. **Configure input parameters (if applicable):**
     Modify the configuration files in the `config` directory to adapt the fit to your specific data.
 
