@@ -26,8 +26,7 @@ class PMTfit : public BCModel
 {
 public:
 
-    PMTfit(const std::string& name, std::string model, std::string datafile,
-           int nth, int Np, int Iprec);
+    PMTfit(const std::string& mode, int nth, int index, double *L, double x, double y);
 
     ~PMTfit(){};
 
@@ -37,35 +36,12 @@ public:
 
     double D2(double x, double y, int i);
     
-//    std::vector<int> run;
-    int getRun(int i);
-//    std::vector<int> event;
-    int getEvent(int i);
-//    std::vector<int> trigger;
-    int getTrigger(int i);
-//
-//    std::vector<int> mj2;
-    int getMj2(int i);
-//    std::vector<int> GE;
-    int getGE(int i);
-//    std::vector<int> indx;
-    int getIndx(int i);
-//
-//    std::vector<double> xtrue;
-    double getXtrue(int i);
-//    std::vector<double> ytrue;
-    double getYtrue(int i);
-//    std::vector<double> sX;
-    double getSigX(int i);
-//    std::vector<double> integral;
-    double getIntegral(int i);
-//     std::vector<int> time;
-
 private:
     double Lmax;
-    unsigned int Npoints;
-    std::string r_type_;
-    std::string res_dir_;
+    double cmax;
+    std::string mode_;
+    std::int index_;
+
 
     // prior parameters
     double L_mean = 0;
@@ -74,8 +50,6 @@ private:
     double c_mean[4] = {0.};
     double c_std[4] = {0.};
     
-    int iprec_;
-
     //PMT positions (in cm)
     double x1 = 2.3;
     double y1 = 30.7;
@@ -91,30 +65,54 @@ private:
 
     double zGEM = 19;
 
-    std::vector<std::vector<double>> data {4};
+    double data[4] = {0.};
 
-    // Imported values
-    std::vector<int> run;
-    std::vector<int> event;
-    std::vector<int> trigger;
-    
-    std::vector<int> mj2;
-    std::vector<int> GE;
-    std::vector<int> indx;
-    
-    std::vector<double> xtrue;
-    std::vector<double> ytrue;
-    std::vector<double> sX;
-    std::vector<double> integral;
+    double xTrue = 0.;
+    double yTrue = 0.;
 
-    
-    int ReadInputFile(std::string filename);
-        
 };
 
 void print_usage() {
-    std::cout << "Usage: program -m mode -i input_file -r start_row -o output_file [-p] [-c] [-l] [-h]" << std::endl;
+    std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
 }
+
+
+// class for the reading of the input file
+class DataReader {
+public:
+    DataReader(const std::string& input_file, const std::string& mode) {
+        readFile(input_file, mode);
+    }
+
+    const std::vector<int>& getRun();
+    const std::vector<int>& getEvent();
+    const std::vector<int>& getTrigger();
+    const std::vector<int>& getIndx();
+
+    const std::vector<double>& getXtrue();
+    const std::vector<double>& getYtrue();
+    const std::vector<double>& getL1();
+    const std::vector<double>& getL2();
+    const std::vector<double>& getL3();
+    const std::vector<double>& getL4();
+
+private:
+    std::vector<int> run;
+    std::vector<int> event;
+    std::vector<int> trigger;
+    std::vector<int> indx;
+    
+    std::vector<double> L1;
+    std::vector<double> L2;
+    std::vector<double> L3;
+    std::vector<double> L4;
+
+    std::vector<double> xtrue;
+    std::vector<double> ytrue;
+
+    void readFile(const std::string& filename, const std::string& mode);
+};
+
 
 
 #endif /* PMT_standard_hpp */

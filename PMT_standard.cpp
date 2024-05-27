@@ -11,103 +11,63 @@
 #include <BAT/BCMath.h>
 #include <cmath>
 
-PMTfit::PMTfit(const std::string& name,
-               std::string r_type, std::string datafile,
-               int nth, int Np, int Iprec
-//               std::string res_dir
-               ) : BCModel(name)
+
+// PMTfit class
+PMTfit::PMTfit(const std::string& mode, int nth, 
+               int index, double *L, double x, double y) : BCModel(mode)
 {
-    std::cout<<"Starting fit for '"<<r_type<<" reconstruction'"<<std::endl;
+    std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
-    r_type_ = r_type;
+    mode_ = mode;
     Lmax = 200000;
-    
-    int cntrl = ReadInputFile(datafile);
+    cmax = 200;
+    index_ = index;
+    xTrue = x;
+    yTrue = y;
 
-    if (cntrl!=0){
-      throw std::runtime_error("Couldn't read the input file");
+    for (int i = 0; i < 4; ++i) {
+            data[i] = L[i];
     }
-
-    Npoints  = Np;
-
-    iprec_ = Iprec;
-    
+        
     //DEFINING parameters
-    if (r_type_.compare("peaks") == 0) {
+    if (mode_.compare("association") == 0) {
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
-//         GetParameter("L").Fix(1.0);
 
-        for(unsigned int i=(iprec_+1)*Npoints; i<(iprec_+2)*Npoints; i++) {
-            AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
-            AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
-        }
+        AddParameter("x", 0, 33, "x", "[cm]");
+        AddParameter("y", 0, 33, "y", "[cm]");
         
-        AddParameter("c1", 0., 2., "c1", "[counts]");
-        AddParameter("c2", 0., 2., "c2", "[counts]");
-        AddParameter("c3", 0., 2., "c3", "[counts]");
-        AddParameter("c4", 0., 2., "c4", "[counts]");
+        AddParameter("c1", 0., cmax, "c1", "[counts]");
+        AddParameter("c2", 0., cmax, "c2", "[counts]");
+        AddParameter("c3", 0., cmax, "c3", "[counts]");
+        AddParameter("c4", 0., cmax, "c4", "[counts]");
         
-        //  FIXING CALIBRATION
-        
-        // 'Good' calibration
+        //  FIXING PMT CALIBRATION         
         GetParameter("c1").Fix(1.0);
         GetParameter("c2").Fix(0.965);
         GetParameter("c3").Fix(0.860);
         GetParameter("c4").Fix(0.827);
 
- 	    // 'Bad' calibration
-//         GetParameter("c1").Fix(1.0);
-//         GetParameter("c2").Fix(1.22);                                                         
-//         GetParameter("c3").Fix(0.529);                                                          
-//         GetParameter("c4").Fix(0.672);
-
-    } else if (r_type_.compare("slices") == 0){
+    } else if (mode_.compare("PMTcalibration") == 0){
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
+        GetParameter("L").Fix(40000.0); // just to have c_i values smaller, can put any value, 
+                                        // we are only interested in the c_i ratios
 
-        for(unsigned int i=(iprec_+1)*Npoints; i<(iprec_+2)*Npoints; i++) {
-            AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
-            AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
-        }
-        
-        AddParameter("c1", 0., 2., "c1", "[counts]");
-        AddParameter("c2", 0., 2., "c2", "[counts]");
-        AddParameter("c3", 0., 2., "c3", "[counts]");
-        AddParameter("c4", 0., 2., "c4", "[counts]");
+        AddParameter("x", 0, 33, "x", "[cm]");
+        AddParameter("y", 0, 33, "y", "[cm]"); 
 
-        // 'Good' calibration
-        GetParameter("c1").Fix(1.0);
-        GetParameter("c2").Fix(0.965);
-        GetParameter("c3").Fix(0.860);
-        GetParameter("c4").Fix(0.827);
-        
-    } else if (r_type_.compare("PMTcalibration") == 0){
-        AddParameter("L", 0, Lmax, "L", "[a.u.]");
-        GetParameter("L").Fix(40000.0);
-        
-        // Alternativa
-//         GetParameter("L").Fix(1.0);
+        // The prior for the c_i can be tweked to reduce parameter space
+        AddParameter("c1", 0., cmax., "c1", "[counts]");
+        AddParameter("c2", 0., cmax., "c2", "[counts]");
+        AddParameter("c3", 0., cmax., "c3", "[counts]");
+        AddParameter("c4", 0., cmax., "c4", "[counts]");
 
-        for(unsigned int i=(iprec_+1)*Npoints; i<(iprec_+2)*Npoints; i++) {
-            AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
-            AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
-        }
-        
-        AddParameter("c1", 0., 2., "c1", "[counts]");
-        AddParameter("c2", 0., 2., "c2", "[counts]");
-        AddParameter("c3", 0., 2., "c3", "[counts]");
-        AddParameter("c4", 0., 2., "c4", "[counts]");
-        
-        // Alternativa
-       
-//        AddParameter("c1", 1000., 80000., "c1", "[counts]");
-//        AddParameter("c2", 1000., 80000., "c2", "[counts]");
-//        AddParameter("c3", 1000., 80000., "c3", "[counts]");
-//        AddParameter("c4", 1000., 80000., "c4", "[counts]");
+        //  FIXING PMT CALIBRATION         
+        GetParameter("x").Fix(xTrue);
+        GetParameter("y").Fix(yTrue);
 
-    } else if (r_type_.compare("POScomparison") == 0){
-        throw std::runtime_error("Reconstruction '"+r_type_+"' not implemented yet.\n");
+
     } else {
-        throw std::runtime_error("Unknown model '"+r_type_+"'.\n");
+        throw std::runtime_error("Unknown model '"+mode_+"'.\n");
     }
     
     omp_set_dynamic(0);
@@ -115,40 +75,29 @@ PMTfit::PMTfit(const std::string& name,
 }
 
 
-
+// Compute Likelihood
 double PMTfit::LogLikelihood(const std::vector<double>& pars) {
 
     double LL = 0.;
     
-//    if(r_type_.compare("standard")==0) {
-
-        for(unsigned int i=0; i<Npoints; i++) {
-            for(unsigned int j=0; j<4; j++) {
-                double Lij = data[j][i+(iprec_+1)*Npoints]; // here the data
-                double sLij = 0.1*Lij;                      // for now set to 10% of the integral
-                
-                int k = 2*Npoints +1 +j;
-                
-                double tmp = sqrt(D2(pars[2*i+1], pars[2*i+2], j));
-                LL += BCMath::LogGaus(Lij,                             // x, namely Lij
-                                      (pars[0]*pars[k])/(pow(tmp, 4)), // mu, namely the light computed in the step
-                                      sLij,                            // sigma
-                                      true                             // norm factor
-                                      );
-            }
-        }
-//     } else if (r_type_.compare("differentL") == 0){
-//         throw std::runtime_error("Model '"+r_type_+"' not implemented yet.\n");
-    // } else {
-    //     throw std::runtime_error("Unknown model '"+r_type_+"'.\n");
-    // }
+    for(unsigned int j=0; j<4; j++) {
+        double Lj = data[j];  // here the data
+        double sLj = 0.1*Lj; // for now set to 10% of the integral
+        
+        int k = 3 +j;  // index for c_i (pars[3] is c_1 and so on)
+        
+        double tmp = sqrt(D2(pars[1], pars[2], j));           // compute r_i
+        LL += BCMath::LogGaus(Lj,                             // x, namely Lj
+                             (pars[0]*pars[k])/(pow(tmp, 4)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
+                             sLj,                             // sigma
+                             true                             // norm factor
+                             );
+    }
 
     return LL;
 }
 
-
-
-
+// Define prior
 double PMTfit::LogAPrioriProbability(const std::vector<double>& pars) {
     double LL = 0.;
         //flat priors everywhere
@@ -158,7 +107,7 @@ double PMTfit::LogAPrioriProbability(const std::vector<double>& pars) {
             LL += log(1.0/Lmax);
         }
     
-    for(unsigned int i=1; i<2*Npoints+1; i++) {
+    for(unsigned int i=1; i<3; i++) {
         if(pars[i]<0 || pars[i]>33.) {
             LL += log(0.0);
         } else {
@@ -166,26 +115,17 @@ double PMTfit::LogAPrioriProbability(const std::vector<double>& pars) {
         }
     }
     
-    for(unsigned int j=(pars.size()-4); j<pars.size(); j++){
-            if(pars[j]<0. || pars[j]>2.) {
+    for(unsigned int j=3; j<7; j++){
+            if(pars[j]<0. || pars[j]>cmax) {
                 LL += log(0.0);
             } else {
-                LL += log(1.0/2.);
+                LL += log(1.0/cmax);
             }
         }
-    // Alternativa
-//     for(unsigned int j=(pars.size()-4); j<pars.size(); j++){
-//         if(pars[j]<1000. || pars[j]>80000.) {
-//             LL += log(0.0);
-//         } else {
-//             LL += log(1.0/79000.);
-//         }
-//     }
-
     return LL;
 }
 
-
+// Function to calculate distance between the PMT and the chosen position
 double PMTfit::D2(double x, double y, int i) {
     if (i == 0) {
         return (x - x1)*(x - x1) + (y - y1)*(y - y1) + zGEM*zGEM;
@@ -203,154 +143,91 @@ double PMTfit::D2(double x, double y, int i) {
 
 
 
+// ===========================================================
+// DataReader class
 
-int PMTfit::ReadInputFile(std::string filename) {
+// "returners"
+const std::vector<int>& DataReader::getRun(){
+    return run;
+}
+const std::vector<int>& DataReader::getEvent(){
+    return event;
+}
+const std::vector<int>& DataReader::getTrigger(){
+    return trigger;
+}
+const std::vector<int>& DataReader::getIndx(){
+    return indx;
+}
+const std::vector<double>& DataReader::getXtrue(){
+    return xtrue;
+}
+const std::vector<double>& DataReader::getYtrue(){
+    return ytrue;
+}
+const std::vector<double>& DataReader::getL1(){
+    return L1;
+}
+const std::vector<double>& DataReader::getL2(){
+    return L2;
+}
+const std::vector<double>& DataReader::getL3(){
+    return L3;
+}
+const std::vector<double>& DataReader::getL4(){
+    return L4;
+}
 
-    std::ifstream myfile;
-    myfile.open(filename);
 
-    std::string runstr, evstr, trgstr, L1str, L2str, L3str, L4str;
-    std::string GEstr, indxstr, mj2str;                   //Analisi mia
-    std::string xx, yy, sx, integ, sL1, sL2, sL3, sL4;    //Analisi di Matteo
-    std::string p1str, p2str, p3str, p4str, w1str, w2str, w3str, w4str;
-    
-    if(myfile.is_open()) {
-        if(r_type_.compare("peaks") == 0) {
-            while(myfile >>                              //Analisi mia
-                  runstr >> evstr >> trgstr >> GEstr >> indxstr >>
-                  L1str >> L2str >> L3str >> L4str >> mj2str)
-            {
-                //       while(myfile >>                                 //Analisi di Matteo
-                //             runstr >> evstr >> trgstr >>
-                //             xx >> yy >> sx >> integ >>
-                //             L1str >> L2str >> L3str >> L4str>>
-                //             sL1 >> sL2 >> sL3 >> sL4
-                //             ) {
-                
+void DataReader::readFile(const std::string& input_file, const std::string& mode){
+    std::ifstream file(input_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open file");
+    }
+
+    std::string runstr, evstr, trgstr, indxstr, L1str, L2str, L3str, L4str;
+    std::string xtruestr, ytruestr;                   
+
+    if(file.is_open()) {
+        if(mode.compare("association") == 0) {
+            while(file >>                              //Analisi mia
+                  runstr >> evstr >> trgstr >> indxstr >>
+                  L1str >> L2str >> L3str >> L4str)
+            {                
                 run.push_back(stoi(runstr));
                 event.push_back(stoi(evstr));
                 trigger.push_back(stoi(trgstr));
-                
-                GE.push_back(stoi(GEstr));                //Analisi mia
                 indx.push_back(stoi(indxstr));
-                mj2.push_back(stoi(mj2str));
-                //           time.push_back(stod(timestr));
                 
-                //          xtrue.push_back(stod(xx));                     //Analisi di Matteo
-                //          ytrue.push_back(stod(yy));
-                //          sX.push_back(stod(sx));
-                //          integral.push_back(stod(integ));
-                
-                double L1 = stod(L1str);
-                data[0].push_back(L1);
-                
-                double L2 = stod(L2str);
-                data[1].push_back(L2);
-                
-                double L3 = stod(L3str);
-                data[2].push_back(L3);
-                
-                double L4 = stod(L4str);
-                data[3].push_back(L4);
-                
+                L1.push_back(stod(L1str));
+                L2.push_back(stod(L2str));
+                L3.push_back(stod(L3str));
+                L4.push_back(stod(L4str));
             }
-        } else if (r_type_.compare("slices") == 0){
-            while(myfile >>
-                  runstr >> evstr >> trgstr >> GEstr >> indxstr >>
-                  L1str >> L2str >> L3str >> L4str >> mj2str
-                  ) {
-                
+        } else if (mode.compare("PMTcalibration") == 0){
+            while(file >>
+                  runstr >> evstr >> trgstr >> indxstr >>
+                  L1str >> L2str >> L3str >> L4str >> xtruestr >> ytruestr
+                  ) {                
                 run.push_back(stoi(runstr));
                 event.push_back(stoi(evstr));
                 trigger.push_back(stoi(trgstr));
-                GE.push_back(stoi(GEstr));
                 indx.push_back(stoi(indxstr));
                 
-                double L1 = stod(L1str);
-                data[0].push_back(L1);
-                
-                double L2 = stod(L2str);
-                data[1].push_back(L2);
-                
-                double L3 = stod(L3str);
-                data[2].push_back(L3);
-                
-                double L4 = stod(L4str);
-                data[3].push_back(L4);
+                L1.push_back(stod(L1str));
+                L2.push_back(stod(L2str));
+                L3.push_back(stod(L3str));
+                L4.push_back(stod(L4str));
+                xtrue.push_back(stod(xtruestr));
+                ytrue.push_back(stod(ytruestr));
             }
-            
-        } else if (r_type_.compare("PMTcalibration") == 0){
-//             int count = 0;
-            while(myfile >>
-                  runstr >> evstr >> trgstr >> GEstr >> indxstr >>
-                  L1str >> L2str >> L3str >> L4str >> mj2str>>
-                  p1str >> p2str >> p3str >> p4str >>
-                  w1str >> w2str >> w3str >> w4str
-                  ) {
-//                 if (count<10){
-//                 std::cout<<runstr<< "\t" <<evstr<< "\t" <<trgstr<< "\t" <<GEstr<< "\t" <<indxstr
-//                     << "\t" <<L1str<< "\t" <<L2str<< "\t" <<L3str<< "\t" <<L4str<<std::endl;
-//                 count +=1;
-//                 }
-                
-                    
-                run.push_back(stoi(runstr));
-                event.push_back(stoi(evstr));
-                trigger.push_back(stoi(trgstr));
-                GE.push_back(stoi(GEstr));
-                indx.push_back(stoi(indxstr));
-                
-                double L1 = stod(L1str);
-                data[0].push_back(L1);
-                
-                double L2 = stod(L2str);
-                data[1].push_back(L2);
-                
-                double L3 = stod(L3str);
-                data[2].push_back(L3);
-                
-                double L4 = stod(L4str);
-                data[3].push_back(L4);
-            }
-        } else if (r_type_.compare("POScomparison") == 0){
-            throw std::runtime_error("Unknown model '"+r_type_+"'.\n");
+        } else {
+            throw std::runtime_error("No matched mode for file readout\n");
         }
     } else {
         throw std::runtime_error("Could not open the file\n");
     }
-    myfile.close();
+    file.close();
 
     return 0;
-}
-
-// "returners"
-int PMTfit::getRun(int i){
-    return run[i];
-}
-int PMTfit::getEvent(int i){
-    return event[i];
-}
-int PMTfit::getTrigger(int i){
-    return trigger[i];
-}
-int PMTfit::getMj2(int i){
-    return mj2[i];
-}
-int PMTfit::getGE(int i){
-    return GE[i];
-}
-int PMTfit::getIndx(int i){
-    return indx[i];
-}
-double PMTfit::getXtrue(int i){
-    return xtrue[i];
-}
-double PMTfit::getYtrue(int i){
-    return ytrue[i];
-}
-double PMTfit::getSigX(int i){
-    return sX[i];
-}
-double PMTfit::getIntegral(int i){
-    return integral[i];
 }
