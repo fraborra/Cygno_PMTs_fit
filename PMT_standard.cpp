@@ -56,10 +56,10 @@ PMTfit::PMTfit(const std::string& mode, int nth,
         AddParameter("y", 0, 33, "y", "[cm]"); 
 
         // The prior for the c_i can be tweked to reduce parameter space
-        AddParameter("c1", 0., cmax., "c1", "[counts]");
-        AddParameter("c2", 0., cmax., "c2", "[counts]");
-        AddParameter("c3", 0., cmax., "c3", "[counts]");
-        AddParameter("c4", 0., cmax., "c4", "[counts]");
+        AddParameter("c1", 0., cmax, "c1", "[counts]");
+        AddParameter("c2", 0., cmax, "c2", "[counts]");
+        AddParameter("c3", 0., cmax, "c3", "[counts]");
+        AddParameter("c4", 0., cmax, "c4", "[counts]");
 
         //  FIXING PMT CALIBRATION         
         GetParameter("x").Fix(xTrue);

@@ -40,7 +40,7 @@ private:
     double Lmax;
     double cmax;
     std::string mode_;
-    std::int index_;
+    int index_;
 
 
     // prior parameters
