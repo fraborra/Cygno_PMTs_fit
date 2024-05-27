@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <filesystem>
+// #include <filesystem>
 
 #include "PMT_standard.hpp"
 
@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
     int option;
     std::string mode;
     std::string input_file;
+    std::string res_dir;
     int start_ind = -1;
     int end_ind = -1;
     std::string output_file;
@@ -118,7 +119,7 @@ int main(int argc, char *argv[]) {
     
 
     // BEGIN OF THE FIT LOOP
-    for (int index = start_ind; index < end_ind+1; i++)
+    for (int index = start_ind; index < end_ind+1; index++)
     {
         double x, y;
         // import the L from the array
@@ -133,8 +134,8 @@ int main(int argc, char *argv[]) {
             y = 0.;
         } else if (mode.compare("PMTcalibration") == 0)
         {
-            x = data.getXtrue();
-            y = data.getYtrue();
+            x = data.getXtrue()[index];
+            y = data.getYtrue()[index];
         }
         
 
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
             m.SetNIterationsPreRunMax(1000000);
             std::vector<double> x0;
             x0.push_back(100.);    // L
-            for(int i=0; i<Npoints; i++) { // x and y
+            for(int i=0; i<2; i++) { // x and y
                 x0.push_back(16.5);
                 x0.push_back(16.5);
             }
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
 
         // Write MCMC on root file (The full chains are not needed for the position reconstruction)
         if (write_chains) {
-            m..WriteMarkovChain(res_dir+m.GetSafeName() + "_" + index + "_mcmc.root", "RECREATE");
+            m.WriteMarkovChain(res_dir+m.GetSafeName() + "_" + index + "_mcmc.root", "RECREATE");
         }
 
         // Run MCMC, marginalizing posterior
@@ -202,87 +203,87 @@ int main(int argc, char *argv[]) {
         // Print results of the analysis into a text file
         m.PrintSummary();
 
-// CHE ALTRO DEVO FARE QUI DENTRO???
+        // Need to add output
 
     }
     
         
     
-    std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
+    // std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
             
-    std::ofstream outfile;
-    outfile.open(outfile_name, std::ios_base::app);
+    // std::ofstream outfile;
+    // outfile.open(outfile_name, std::ios_base::app);
 
-    // Check if the pre run has converged:
-    int status = m.GetNIterationsConvergenceGlobal();
+    // // Check if the pre run has converged:
+    // int status = m.GetNIterationsConvergenceGlobal();
 
-    // print results on file
-    if(mode.compare("association") == 0) {
-        if (status>0){
-            BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
-            BCH1D posteriorx1 = m.GetMarginalized(H1Indices[1]);
-            BCH1D posteriory1 = m.GetMarginalized(H1Indices[2]);
+    // // print results on file
+    // if(mode.compare("association") == 0) {
+    //     if (status>0){
+    //         BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
+    //         BCH1D posteriorx1 = m.GetMarginalized(H1Indices[1]);
+    //         BCH1D posteriory1 = m.GetMarginalized(H1Indices[2]);
 
-            outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
-            <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
-            <<posteriorL.GetHistogram()->GetMean()<< "\t"<<posteriorL.GetHistogram()->GetRMS()<< "\t"      // L and L_std
-            <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x and x_std
-            <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y and y_std
-            <<m.getMj2(start_ind) << std::endl;
-        } else {
-            outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
-            <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
-            <<"-100"<< "\t"<<"-100"<< "\t" // L and L_std
-            <<"-100"<< "\t"<<"-100"<< "\t" // x and x_std
-            <<"-100"<< "\t"<<"-100"<< "\t" // y and y_std
-            <<m.getMj2(start_ind)<< std::endl;
+    //         outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
+    //         <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
+    //         <<posteriorL.GetHistogram()->GetMean()<< "\t"<<posteriorL.GetHistogram()->GetRMS()<< "\t"      // L and L_std
+    //         <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x and x_std
+    //         <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y and y_std
+    //         <<m.getMj2(start_ind) << std::endl;
+    //     } else {
+    //         outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
+    //         <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
+    //         <<"-100"<< "\t"<<"-100"<< "\t" // L and L_std
+    //         <<"-100"<< "\t"<<"-100"<< "\t" // x and x_std
+    //         <<"-100"<< "\t"<<"-100"<< "\t" // y and y_std
+    //         <<m.getMj2(start_ind)<< std::endl;
             
-            std::cout<<"==================================================="<<std::endl
-            << std::endl<< std::endl<< "Did not converge"
-            <<"==================================================="<<std::endl<<std::endl;
-        }
+    //         std::cout<<"==================================================="<<std::endl
+    //         << std::endl<< std::endl<< "Did not converge"
+    //         <<"==================================================="<<std::endl<<std::endl;
+    //     }
         
-    } else if (mode.compare("PMTcalibration") == 0) {
-        if (status>0){
-            BCH1D posteriorx1 = m.GetMarginalized(H1Indices[0]);
-            BCH1D posteriory1 = m.GetMarginalized(H1Indices[1]);
+    // } else if (mode.compare("PMTcalibration") == 0) {
+    //     if (status>0){
+    //         BCH1D posteriorx1 = m.GetMarginalized(H1Indices[0]);
+    //         BCH1D posteriory1 = m.GetMarginalized(H1Indices[1]);
             
-            BCH1D posc1 = m.GetMarginalized(H1Indices[2]);
-            BCH1D posc2 = m.GetMarginalized(H1Indices[3]);
-            BCH1D posc3 = m.GetMarginalized(H1Indices[4]);
-            BCH1D posc4 = m.GetMarginalized(H1Indices[5]);
+    //         BCH1D posc1 = m.GetMarginalized(H1Indices[2]);
+    //         BCH1D posc2 = m.GetMarginalized(H1Indices[3]);
+    //         BCH1D posc3 = m.GetMarginalized(H1Indices[4]);
+    //         BCH1D posc4 = m.GetMarginalized(H1Indices[5]);
 
-            outfile<<m.getRun(start_ind)<<"\t"
-            <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x1 and x1_std
-            <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y1 and y1_std
+    //         outfile<<m.getRun(start_ind)<<"\t"
+    //         <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x1 and x1_std
+    //         <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y1 and y1_std
 
-            <<(posc1.GetHistogram())->GetMean()<<"\t"<<(posc1.GetHistogram())->GetRMS()<< "\t"      // c1 and c1_std
-            <<(posc2.GetHistogram())->GetMean()<<"\t"<<(posc2.GetHistogram())->GetRMS()<< "\t"      // c2 and c2_std
-            <<(posc3.GetHistogram())->GetMean()<<"\t"<<(posc3.GetHistogram())->GetRMS()<< "\t"      // c3 and c3_std
-            <<(posc4.GetHistogram())->GetMean()<<"\t"<<(posc4.GetHistogram())->GetRMS()<<std::endl; // c4 and c4_std
+    //         <<(posc1.GetHistogram())->GetMean()<<"\t"<<(posc1.GetHistogram())->GetRMS()<< "\t"      // c1 and c1_std
+    //         <<(posc2.GetHistogram())->GetMean()<<"\t"<<(posc2.GetHistogram())->GetRMS()<< "\t"      // c2 and c2_std
+    //         <<(posc3.GetHistogram())->GetMean()<<"\t"<<(posc3.GetHistogram())->GetRMS()<< "\t"      // c3 and c3_std
+    //         <<(posc4.GetHistogram())->GetMean()<<"\t"<<(posc4.GetHistogram())->GetRMS()<<std::endl; // c4 and c4_std
             
-        } else {
-            outfile<<m.getRun(start_ind)<<"\t"
-            <<"-100"<< "\t"<<"-100"<< "\t" <<"-100"<< "\t"<<"-100"<< "\t" // x1, y1 with stds
+    //     } else {
+    //         outfile<<m.getRun(start_ind)<<"\t"
+    //         <<"-100"<< "\t"<<"-100"<< "\t" <<"-100"<< "\t"<<"-100"<< "\t" // x1, y1 with stds
 
-            <<"-100"<< "\t"<<"-100"<< "\t"       // c1 and c1_std
-            <<"-100"<< "\t"<<"-100"<< "\t"       // c2 and c2_std
-            <<"-100"<< "\t"<<"-100"<< "\t"       // c3 and c3_std
-            <<"-100"<< "\t"<<"-100"<< std::endl; // c4 and c4_std
+    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c1 and c1_std
+    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c2 and c2_std
+    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c3 and c3_std
+    //         <<"-100"<< "\t"<<"-100"<< std::endl; // c4 and c4_std
             
-            std::cout<<"==================================================="<<std::endl
-            << std::endl<< std::endl<< "Did not converge"
-            <<"==================================================="<<std::endl<<std::endl;
-        }
+    //         std::cout<<"==================================================="<<std::endl
+    //         << std::endl<< std::endl<< "Did not converge"
+    //         <<"==================================================="<<std::endl<<std::endl;
+    //     }
         
-    } else if {
-        throw std::runtime_error("Unknown reconstruction '"+mode+"'.\n");
-    }
+    // } else if {
+    //     throw std::runtime_error("Unknown reconstruction '"+mode+"'.\n");
+    // }
     
-    if (write_log) {
-        // Close log file
-        BCLog::OutSummary("Exiting");
-        BCLog::CloseLog();
-    }
+    // if (write_log) {
+    //     // Close log file
+    //     BCLog::OutSummary("Exiting");
+    //     BCLog::CloseLog();
+    // }
     return 0;
 }

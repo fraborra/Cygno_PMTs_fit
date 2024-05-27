@@ -229,5 +229,5 @@ void DataReader::readFile(const std::string& input_file, const std::string& mode
     }
     file.close();
 
-    return 0;
+    return;
 }
