@@ -19,15 +19,19 @@ PMTfit::PMTfit(const std::string& mode, int nth,
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 200000;
-    cmax = 200;
+    Lmax = 20000;
+    cmax = 2;
     index_ = index;
     xTrue = x;
     yTrue = y;
 
+    std::cout << "Dentro il fit" << std::endl << std::endl;
+
     for (int i = 0; i < 4; ++i) {
-            data[i] = L[i];
+        data[i] = L[i];
+        std::cout << "L"<<i<<":\t" << L[i] << "\t";
     }
+        std::cout << std::endl;
         
     //DEFINING parameters
     if (mode_.compare("association") == 0) {
@@ -51,20 +55,17 @@ PMTfit::PMTfit(const std::string& mode, int nth,
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").Fix(40000.0); // just to have c_i values smaller, can put any value, 
                                         // we are only interested in the c_i ratios
-
         AddParameter("x", 0, 33, "x", "[cm]");
         AddParameter("y", 0, 33, "y", "[cm]"); 
+        //  FIXING x and y COORDINATES         
+        GetParameter("x").Fix(xTrue);
+        GetParameter("y").Fix(yTrue);
 
-        // The prior for the c_i can be tweked to reduce parameter space
+        // The prior for the c_i can be tweaked to reduce parameter space
         AddParameter("c1", 0., cmax, "c1", "[counts]");
         AddParameter("c2", 0., cmax, "c2", "[counts]");
         AddParameter("c3", 0., cmax, "c3", "[counts]");
         AddParameter("c4", 0., cmax, "c4", "[counts]");
-
-        //  FIXING PMT CALIBRATION         
-        GetParameter("x").Fix(xTrue);
-        GetParameter("y").Fix(yTrue);
-
 
     } else {
         throw std::runtime_error("Unknown model '"+mode_+"'.\n");
@@ -82,13 +83,16 @@ double PMTfit::LogLikelihood(const std::vector<double>& pars) {
     
     for(unsigned int j=0; j<4; j++) {
         double Lj = data[j];  // here the data
+        // std::cout<< "i: " << j << "\t" << "L: "<< Lj << std::endl;
+
         double sLj = 0.1*Lj; // for now set to 10% of the integral
         
         int k = 3 +j;  // index for c_i (pars[3] is c_1 and so on)
-        
-        double tmp = sqrt(D2(pars[1], pars[2], j));           // compute r_i
+        // std::cout<< "k: " << k << "\t" << "cj: "<< pars[k] << std::endl;
+        std::cout.flush();
+        double tmp = D2(pars[1], pars[2], j);                // compute r_i**2
         LL += BCMath::LogGaus(Lj,                             // x, namely Lj
-                             (pars[0]*pars[k])/(pow(tmp, 4)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
+                             (pars[0]*pars[k])/(pow(tmp, 2)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
                              sLj,                             // sigma
                              true                             // norm factor
                              );
@@ -177,7 +181,6 @@ const std::vector<double>& DataReader::getL3(){
 const std::vector<double>& DataReader::getL4(){
     return L4;
 }
-
 
 void DataReader::readFile(const std::string& input_file, const std::string& mode){
     std::ifstream file(input_file);

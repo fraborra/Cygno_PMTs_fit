@@ -14,9 +14,13 @@
 // #include <filesystem>
 
 #include "PMT_standard.hpp"
+// #include "helper.hpp"
 
-namespace fs = std::filesystem;
+// namespace fs = std::filesystem;
 
+void how_to_use() {
+    std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -35,7 +39,7 @@ int main(int argc, char *argv[]) {
     while ((option = getopt(argc, argv, "hm:i:s:e:o:pcl")) != -1) {
         switch (option) {
             case 'h':
-                print_usage();
+                how_to_use();
                 return 0;
             case 'm':
                 mode = optarg;
@@ -62,14 +66,14 @@ int main(int argc, char *argv[]) {
                 write_log = true;
                 break;
             default:
-                print_usage();
+                how_to_use();
                 return 1;
         }
     }
     
     if (mode.empty() || input_file.empty() || start_ind == -1 || output_file.empty() || end_ind == -1) {
         std::cerr << "Missing required options." << std::endl;
-        print_usage();
+        how_to_use();
         return 1;
     }
 
@@ -91,20 +95,26 @@ int main(int argc, char *argv[]) {
 //  Create results folder if not existing and plot/log/chains requested
     if (write_chains || write_log || plot) {
         res_dir = "./output_"+mode;
-        if (!fs::exists(res_dir)) {
-            if (fs::create_directory(res_dir)) {
-                std::cout << "Directory created successfully: " << res_dir << std::endl;
-            } else {
-                std::cerr << "Failed to create directory: " << res_dir << std::endl;
-            }
+
+        int com = std::system(("mkdir "+res_dir).c_str());
+        if(com != 0) {
+            std::cout<<com<<std::endl;
         } else {
-            std::cout << "Directory already exists: " << res_dir << std::endl;
+            std::cerr << "Failed to create directory: " << res_dir << std::endl;
         }
+        // if (!fs::exists(res_dir)) {
+        //     if (fs::create_directory(res_dir)) {
+                // std::cout << "Directory created successfully: " << res_dir << std::endl;
+        //     } else {
+        //         std::cerr << "Failed to create directory: " << res_dir << std::endl;
+        //     }
+        // } else {
+        //     std::cout << "Directory already exists: " << res_dir << std::endl;
+        // }
         res_dir += "/";
     }
     
-// Setting chains parameters
-    
+    // Setting chains parameters
     int Nch, NIter;
     if(mode.compare("association") == 0) {
         Nch = 6;           //number of parallel MCMC chains
@@ -112,14 +122,73 @@ int main(int argc, char *argv[]) {
     } else if (mode.compare("PMTcalibration") == 0){
         Nch = 12;          //number of parallel MCMC chains
         NIter = 1*10000;   //number of step per chain
+    } else {
+        throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");
     }
 
-    // Reading input file
-    DataReader data(input_file);
-    
+    // Preparing output variables
+    std::vector<double> L_mean;
+    std::vector<double> L_std;
+    std::vector<double> x_mean;
+    std::vector<double> x_std;
+    std::vector<double> y_mean;
+    std::vector<double> y_std;
+    std::vector<double> c1_mean;
+    std::vector<double> c1_std;
+    std::vector<double> c2_mean;
+    std::vector<double> c2_std;
+    std::vector<double> c3_mean;
+    std::vector<double> c3_std;
+    std::vector<double> c4_mean;
+    std::vector<double> c4_std;
 
+
+    // Reading input file
+    DataReader data(input_file, mode);
+
+    std::vector<int>::size_type index_max = data.getRun().size();
+    if (end_ind == -1)
+    {
+        end_ind = index_max;
+
+    } else if (index_max<end_ind)
+    {
+        end_ind = index_max;
+    }
+    
+// ======== TESTSTTSTTSTSTSTST
+
+//     std::ofstream outfile1;
+//     outfile1.open(output_file, std::ios_base::app);
+
+//     std::vector<int> run1 = data.getRun();
+//     std::vector<int> event1 = data.getEvent();
+//     std::vector<int> trigger1 = data.getTrigger();
+//     std::vector<int> indx1 = data.getIndx();
+//     std::vector<double> L1 = data.getL1();
+//     std::vector<double> L2 = data.getL2();
+//     std::vector<double> L3 = data.getL3();
+//     std::vector<double> L4 = data.getL4();
+
+
+//     if(mode.compare("association") == 0) {
+//         for (std::vector<int>::size_type i = 0; i < run1.size(); i++)
+//         {        
+//             outfile1 << run1[i] <<"\t"<< event1[i] <<"\t"<< trigger1[i] <<"\t"<< indx1[i] <<"\t"
+//             << L1[i] <<"\t"<< L2[i] <<"\t"  // L and L_std
+//             << L3[i] <<"\t"<< L4[i]  // x and x_std
+//             << std::endl;
+//         }
+
+//     } 
+//     outfile1.close();
+
+//     throw std::invalid_argument("fine test ");
+
+// // ======== TESTSTTSTTSTSTSTST
+    
     // BEGIN OF THE FIT LOOP
-    for (int index = start_ind; index < end_ind+1; index++)
+    for (int index = start_ind; index < end_ind; index++)
     {
         double x, y;
         // import the L from the array
@@ -129,6 +198,15 @@ int main(int argc, char *argv[]) {
         L[2] = data.getL3()[index];
         L[3] = data.getL4()[index];
 
+// // ======== TESTSTTSTTSTSTSTST
+        // for (int i = 0; i < 4; i++)
+        // {
+        //     std::cout << "L:\t" << L[i] << "\t";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "TUTTO L: " << L << std::endl;
+// // ======== TESTSTTSTTSTSTSTST
+
         if(mode.compare("association") == 0) {
             x = 0.;
             y = 0.;
@@ -136,23 +214,24 @@ int main(int argc, char *argv[]) {
         {
             x = data.getXtrue()[index];
             y = data.getYtrue()[index];
+        } else {
+            throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");
         }
-        
 
-        // initialize the model
+        // INITIALIZE THE MODEL
         PMTfit m(mode, Nch, index, L, x, y);
 
-        // Creating Logfile
-        if (write_log) {
-            BCLog::OpenLog(res_dir + m.GetSafeName() + "_" + index + "_log.txt", BCLog::detail, BCLog::detail);
-        }
+        // Creating Logfile // LOGFILE NOT IMPLEMENTED YET
+        // if (write_log) {
+            // m.BCLog::OpenLog(res_dir + m.GetSafeName() + "_" + index + "_log.txt", BCLog::detail, BCLog::detail);
+        // }
 
         // Setting MCMC algorithm and precision
         m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
         m.SetPrecision(BCEngineMCMC::kMedium);
-        if (write_log) {
-            BCLog::OutSummary("Model created");
-        }
+        // if (write_log) {
+        //     BCLog::OutSummary("Model created");
+        // }
         // Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
         if(mode.compare("association") == 0) {
             m.SetNIterationsPreRunMax(100000);
@@ -176,114 +255,166 @@ int main(int argc, char *argv[]) {
         m.SetNIterationsRun(NIter);
         m.SetNChains(Nch);
 
-
-
-        // Write MCMC on root file (The full chains are not needed for the position reconstruction)
-        if (write_chains) {
-            m.WriteMarkovChain(res_dir+m.GetSafeName() + "_" + index + "_mcmc.root", "RECREATE");
-        }
-
+// ===============================================================
         // Run MCMC, marginalizing posterior
         m.MarginalizeAll();
+// ===============================================================
 
         // Run mode finding; by default using Minuit
         m.FindMode(m.GetBestFitParameters());
 
-        if (plot) {
-            // Draw all marginalized distributions into a PDF file
-            m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + index + "_plots.pdf");
-        
-            // Print summary plots
-            m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + index + "_parameters.pdf");
-            m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + index + "_correlation.pdf");
-            m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + index + "_correlationMatrix.pdf");
-            m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
+        // Write MCMC on root file (The full chains are not needed for the position reconstruction)
+        if (write_chains) {
+            m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
+            // m.WriteMarkovChain(res_dir + index + "_mcmc.root", "RECREATE", true, true);
         }
+
+        // if (plot) {
+        //     // Draw all marginalized distributions into a PDF file
+        //     m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + index + "_plots.pdf");
+        
+        //     // Print summary plots
+        //     m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + index + "_parameters.pdf");
+        //     m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + index + "_correlation.pdf");
+        //     m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + index + "_correlationMatrix.pdf");
+        //     m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
+        // }
         
         // Print results of the analysis into a text file
-        m.PrintSummary();
+        // m.PrintSummary();
 
-        // Need to add output
+        // ==================
+        // RESULTS
+        std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
 
+        // Check if the pre run has converged:
+        int status = m.GetNIterationsConvergenceGlobal();
+
+        // start results storing
+        if(mode.compare("association") == 0) {
+            if (status>0){ // If prerun converged then store the results
+                BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
+                BCH1D posteriorx = m.GetMarginalized(H1Indices[1]);
+                BCH1D posteriory = m.GetMarginalized(H1Indices[2]);
+
+                L_mean.push_back(posteriorL.GetHistogram()->GetMean());
+                L_std.push_back(posteriorL.GetHistogram()->GetRMS());
+                
+                x_mean.push_back(posteriorx.GetHistogram()->GetMean());
+                x_std.push_back(posteriorx.GetHistogram()->GetRMS());
+                
+                y_mean.push_back(posteriory.GetHistogram()->GetMean());
+                y_std.push_back(posteriory.GetHistogram()->GetRMS());
+
+            } else { // If prerun not converged then store -1 to all the parameters
+                L_mean.push_back(-1);
+                L_std.push_back(-1);
+                
+                x_mean.push_back(-1);
+                x_std.push_back(-1);
+                
+                y_mean.push_back(-1);
+                y_std.push_back(-1);
+
+                std::cout << "association, status < 0" << std::endl;
+
+            }
+        } else if(mode.compare("PMTcalibration") == 0){
+            if (status>0){ // If prerun converged then store the results
+                BCH1D posteriorc1 = m.GetMarginalized(H1Indices[0]);
+                BCH1D posteriorc2 = m.GetMarginalized(H1Indices[1]);
+                BCH1D posteriorc3 = m.GetMarginalized(H1Indices[2]);
+                BCH1D posteriorc4 = m.GetMarginalized(H1Indices[3]);
+
+                c1_mean.push_back(posteriorc1.GetHistogram()->GetMean());
+                c1_std.push_back(posteriorc1.GetHistogram()->GetRMS());
+
+                c2_mean.push_back(posteriorc2.GetHistogram()->GetMean());
+                c2_std.push_back(posteriorc2.GetHistogram()->GetRMS());
+
+                c3_mean.push_back(posteriorc3.GetHistogram()->GetMean());
+                c3_std.push_back(posteriorc3.GetHistogram()->GetRMS());
+
+                c4_mean.push_back(posteriorc4.GetHistogram()->GetMean());
+                c4_std.push_back(posteriorc4.GetHistogram()->GetRMS());
+
+                std::cout << "calibration, status > 0" << std::endl;
+
+            } else { // If prerun not converged then store -1 to all the parameters
+                c1_mean.push_back(-1);
+                c1_std.push_back(-1);
+                
+                c2_mean.push_back(-1);
+                c2_std.push_back(-1);
+
+                c3_mean.push_back(-1);
+                c3_std.push_back(-1);
+                
+                c4_mean.push_back(-1);
+                c4_std.push_back(-1);
+                std::cout << "calibration, status < 0" << std::endl;
+
+            }
+        } // end store results
+
+    } // end for loop over row indices
+
+
+    // print results on file
+    std::ofstream outfile;
+    outfile.open(output_file, std::ios_base::app);
+
+    std::vector<int> run = data.getRun();
+    std::vector<int> event = data.getEvent();
+    std::vector<int> trigger = data.getTrigger();
+    std::vector<int> indx = data.getIndx();
+
+    // std::cout << "CHECK 1" << std::endl;
+
+    // std::cout << "L_mean " << L_mean.size() << std::endl;
+    // std::cout << "L_std " << L_std.size() << std::endl;
+    // std::cout << "x_mean " << x_mean.size() << std::endl;
+    // std::cout << "x_std " << x_std.size() << std::endl;
+    // std::cout << "y_mean " << y_mean.size() << std::endl;
+    // std::cout << "y_std " << y_std.size() << std::endl;
+
+
+
+    if(mode.compare("association") == 0) {
+        for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++)
+        {        
+            outfile << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+            << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
+            << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
+            << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
+            << std::endl;
+        }
+
+    } else if (mode.compare("PMTcalibration") == 0) {
+        for (std::vector<int>::size_type i = 0; i < c1_mean.size(); i++)
+        {        
+            outfile << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+            << c1_mean[i] <<"\t"<< c1_std[i] <<"\t"  // c1 and std
+            << c2_mean[i] <<"\t"<< c2_std[i] <<"\t"  // c2 and std
+            << c3_mean[i] <<"\t"<< c3_std[i] <<"\t"  // c3 and std
+            << c4_mean[i] <<"\t"<< c4_std[i]         // c4 and std
+            << std::endl;
+        }            
     }
-    
-        
-    
-    // std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
-            
-    // std::ofstream outfile;
-    // outfile.open(outfile_name, std::ios_base::app);
+    outfile.close();
 
-    // // Check if the pre run has converged:
-    // int status = m.GetNIterationsConvergenceGlobal();
-
-    // // print results on file
-    // if(mode.compare("association") == 0) {
-    //     if (status>0){
-    //         BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
-    //         BCH1D posteriorx1 = m.GetMarginalized(H1Indices[1]);
-    //         BCH1D posteriory1 = m.GetMarginalized(H1Indices[2]);
-
-    //         outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
-    //         <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
-    //         <<posteriorL.GetHistogram()->GetMean()<< "\t"<<posteriorL.GetHistogram()->GetRMS()<< "\t"      // L and L_std
-    //         <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x and x_std
-    //         <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y and y_std
-    //         <<m.getMj2(start_ind) << std::endl;
-    //     } else {
-    //         outfile<<m.getRun(start_ind)<<"\t" <<m.getEvent(start_ind)<<"\t"<<m.getTrigger(start_ind)<<"\t"
-    //         <<m.getGE(start_ind)<<"\t" <<m.getIndx(start_ind)<<"\t"
-    //         <<"-100"<< "\t"<<"-100"<< "\t" // L and L_std
-    //         <<"-100"<< "\t"<<"-100"<< "\t" // x and x_std
-    //         <<"-100"<< "\t"<<"-100"<< "\t" // y and y_std
-    //         <<m.getMj2(start_ind)<< std::endl;
-            
-    //         std::cout<<"==================================================="<<std::endl
-    //         << std::endl<< std::endl<< "Did not converge"
-    //         <<"==================================================="<<std::endl<<std::endl;
-    //     }
-        
-    // } else if (mode.compare("PMTcalibration") == 0) {
-    //     if (status>0){
-    //         BCH1D posteriorx1 = m.GetMarginalized(H1Indices[0]);
-    //         BCH1D posteriory1 = m.GetMarginalized(H1Indices[1]);
-            
-    //         BCH1D posc1 = m.GetMarginalized(H1Indices[2]);
-    //         BCH1D posc2 = m.GetMarginalized(H1Indices[3]);
-    //         BCH1D posc3 = m.GetMarginalized(H1Indices[4]);
-    //         BCH1D posc4 = m.GetMarginalized(H1Indices[5]);
-
-    //         outfile<<m.getRun(start_ind)<<"\t"
-    //         <<(posteriorx1.GetHistogram())->GetMean()<<"\t"<<(posteriorx1.GetHistogram())->GetRMS()<< "\t" // x1 and x1_std
-    //         <<(posteriory1.GetHistogram())->GetMean()<<"\t"<<(posteriory1.GetHistogram())->GetRMS()<< "\t" // y1 and y1_std
-
-    //         <<(posc1.GetHistogram())->GetMean()<<"\t"<<(posc1.GetHistogram())->GetRMS()<< "\t"      // c1 and c1_std
-    //         <<(posc2.GetHistogram())->GetMean()<<"\t"<<(posc2.GetHistogram())->GetRMS()<< "\t"      // c2 and c2_std
-    //         <<(posc3.GetHistogram())->GetMean()<<"\t"<<(posc3.GetHistogram())->GetRMS()<< "\t"      // c3 and c3_std
-    //         <<(posc4.GetHistogram())->GetMean()<<"\t"<<(posc4.GetHistogram())->GetRMS()<<std::endl; // c4 and c4_std
-            
-    //     } else {
-    //         outfile<<m.getRun(start_ind)<<"\t"
-    //         <<"-100"<< "\t"<<"-100"<< "\t" <<"-100"<< "\t"<<"-100"<< "\t" // x1, y1 with stds
-
-    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c1 and c1_std
-    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c2 and c2_std
-    //         <<"-100"<< "\t"<<"-100"<< "\t"       // c3 and c3_std
-    //         <<"-100"<< "\t"<<"-100"<< std::endl; // c4 and c4_std
-            
-    //         std::cout<<"==================================================="<<std::endl
-    //         << std::endl<< std::endl<< "Did not converge"
-    //         <<"==================================================="<<std::endl<<std::endl;
-    //     }
-        
-    // } else if {
-    //     throw std::runtime_error("Unknown reconstruction '"+mode+"'.\n");
-    // }
-    
     // if (write_log) {
     //     // Close log file
     //     BCLog::OutSummary("Exiting");
     //     BCLog::CloseLog();
     // }
+    for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++) {        
+        std::cout << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+        << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
+        << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
+        << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
+        << std::endl;
+    }
+
     return 0;
 }

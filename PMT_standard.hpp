@@ -21,6 +21,8 @@
 #include "TH1F.h"
 
 #include "Math/ProbFunc.h"
+// #include "helper.hpp"
+
 
 class PMTfit : public BCModel
 {
@@ -72,9 +74,7 @@ private:
 
 };
 
-void print_usage() {
-    std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
-}
+
 
 
 // class for the reading of the input file
@@ -112,7 +112,4 @@ private:
 
     void readFile(const std::string& filename, const std::string& mode);
 };
-
-
-
 #endif /* PMT_standard_hpp */

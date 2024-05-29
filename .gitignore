@@ -1,0 +1,69 @@
+#===== Specific files
+# output
+*.root
+*.txt
+#others
+helper*
+*ipynb
+
+# Compiled object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executable files
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.mod*
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Project-specific files
+build/
+bin/
+*.log
+*.tmp
+*.temp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE-specific files
+.vscode/
+*.code-workspace
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.cproject
+*.project
+*.launch
+*.pydevproject
