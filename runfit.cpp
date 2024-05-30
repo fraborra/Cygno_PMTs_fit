@@ -280,7 +280,7 @@ int main(int argc, char *argv[]) {
         //     m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
         // }
         
-        // Print results of the analysis into a text file
+        // Print results of the analysis
         // m.PrintSummary();
 
         // ==================
@@ -357,12 +357,17 @@ int main(int argc, char *argv[]) {
             }
         } // end store results
 
+        if (index % 100 == 0) {
+            std::cout << "Iteration number: " << index << std::endl;
+        }
+
+
     } // end for loop over row indices
 
 
     // print results on file
     std::ofstream outfile;
-    outfile.open(output_file, std::ios_base::app);
+    outfile.open(output_file, std::ios_base::trunc);
 
     std::vector<int> run = data.getRun();
     std::vector<int> event = data.getEvent();
@@ -408,13 +413,15 @@ int main(int argc, char *argv[]) {
     //     BCLog::OutSummary("Exiting");
     //     BCLog::CloseLog();
     // }
-    for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++) {        
-        std::cout << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
-        << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
-        << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
-        << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
-        << std::endl;
-    }
+
+    
+    // for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++) {        
+    //     std::cout << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+    //     << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
+    //     << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
+    //     << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
+    //     << std::endl;
+    // }
 
     return 0;
 }

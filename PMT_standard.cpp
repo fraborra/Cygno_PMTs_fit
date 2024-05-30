@@ -25,13 +25,13 @@ PMTfit::PMTfit(const std::string& mode, int nth,
     xTrue = x;
     yTrue = y;
 
-    std::cout << "Dentro il fit" << std::endl << std::endl;
+    // std::cout << "Dentro il fit" << std::endl << std::endl;
 
     for (int i = 0; i < 4; ++i) {
         data[i] = L[i];
-        std::cout << "L"<<i<<":\t" << L[i] << "\t";
+        // std::cout << "L"<<i<<":\t" << L[i] << "\t";
     }
-        std::cout << std::endl;
+        // std::cout << std::endl;
         
     //DEFINING parameters
     if (mode_.compare("association") == 0) {

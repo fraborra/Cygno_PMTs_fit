@@ -24,6 +24,7 @@ helper*
 # Compiled Static libraries
 *.a
 *.lib
+*.d
 
 # Executable files
 *.exe
