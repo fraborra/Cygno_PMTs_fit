@@ -21,34 +21,71 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 
 3. **Compile the project:**
     ```bash
-    mkdir build
-    cd build
-    cmake ..
     make
     ```
-
 ## Usage Instructions
 
 1. **Run the main script:**
+    To run the program use the following use the following command in the terminal: 
     ```bash
-    ./runfit.sh
+    ./runfit -i input.txt -o output.txt -s 0 -e 10 -m association
     ```
+    Where the needed flag are:
+    - `-i  input.txt` : indicates the input file to use for the program.
+    - `-o output.txt`: indicates the output file where the results will be saved.
+    - `-s 0`: defines the starting row of the input file (0 first row).
+    - `-e 10`: defines the ending row of the input file.
+    - `-m association`: specifies the mode of the program (between **association** and **PMTcalibration**).
+    And the optionals:
+    - `-c`: print the MCMC chains of the parameters.
+    - `-p`: saves some plots for the MCMC of the parameters.
+    - `-l`: saves the log files.
 
-## run instruction to be added
-<!--
-2. **Configure input parameters (if applicable):**
-    Modify the configuration files in the `config` directory to adapt the fit to your specific data.
+## Input File Format
+1. **association:**
+    The input file should contain a series of lines, each representing a set of data with the following fields:
 
-3. **Analyze the results:**
-    The fit results will be saved in the `results` directory. Use the analysis scripts in the `scripts` directory to visualize and interpret the results.
+    - **run**: The run number.
+    - **event**: The event number.
+    - **trigger**: The trigger number.
+    - **peak index**: The index indicating the position of the peak in the waveform.
+    - **L1**: The integral of the **PMT 1**.
+    - **L2**: The integral of the **PMT 2**.
+    - **L3**: The integral of the **PMT 3**.
+    - **L4**: The integral of the **PMT 4**.
+
+    Each line in the input file should have these fields separated by a tab.
+
+    Ensure that each line follows this format to allow the runfit program to correctly parse and process the input data.
+
+1. **PMTcalibration:**
+    The same as the association but with two more variables:
+    - **x**: x position of the cluster in the GEM plane, in cm
+    - **y**: y position of the cluster in the GEM plane, in cm
+
+## Output File Format
+
+The output file will contain a series of lines, each representing processed data with the following fields:
+
+- **run**: The run number.
+- **event**: The event number.
+- **trigger**: The trigger number.
+- **peak index**: The index indicating the position of the peak in the waveform.
+- **L**: The value of parameter L.
+- **Lstd**: The standard deviation of parameter L.
+- **x**: The value of parameter x.
+- **xstd**: The standard deviation of parameter x.
+- **y**: The value of parameter y.
+- **ystd**: The standard deviation of parameter y.
+
+Each line in the output file will have these fields separated by a tab.
+
+Each line in the output file will contain the calculated values of these parameters for the corresponding input data line. If the fit didn't converge for a row then all the parameters values will be set with a **-1**.
 
 ## Authors and Contact
 
-- **Name:** [Your Name]
-- **Email:** [Your Email]
-- **Collaboration:** CYGNO Collaboration
-
+- **Name:** Francesco Borra
+- **Email:** francesco.borra@uniroma3.it
 ## Credits
 
-Special thanks to all members of the CYGNO Collaboration for their support and contributions to the project.
--->
+Special thanks Stefano Piacentini.

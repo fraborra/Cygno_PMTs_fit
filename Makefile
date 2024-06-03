@@ -1,7 +1,7 @@
 # List of all class (model) sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
-CXXSRCS = PMT_standard.cpp
+CXXSRCS = PMT_standard.cpp helper_lib.cpp
 
 # List of all program sources used in the program,
 # separated by spaces. A backslash indicates continuation
@@ -50,23 +50,6 @@ link.d : $(addsuffix .hpp,$(basename $(CXXSRCS))) $(CXXSRCS) $(PRGSRCS)
 cose.o :
 	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
 
-#DM_migdal.o :
-#	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
-
-#DM_boosted.o :
-#	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
-#
-#DM_lib.o :
-#	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
-#
-#halo_models.o :
-#	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
-#
-#main.o :
-#	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
-
-#$(CXXOBJS) $(PRGOBJS) :
-#	$(CXX) $(CXXFLAGS) -c $(filter $(basename $@).%,$(filter-out %.h,$^)) -o $@
 
 $(MYPROGS) : $(CXXOBJS) $(PRGOBJS)
 	$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@

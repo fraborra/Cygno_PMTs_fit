@@ -11,16 +11,9 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-// #include <filesystem>
 
 #include "PMT_standard.hpp"
-// #include "helper.hpp"
-
-// namespace fs = std::filesystem;
-
-void how_to_use() {
-    std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
-}
+#include "helper_lib.hpp"
 
 int main(int argc, char *argv[]) {
 
@@ -58,12 +51,15 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p':
                 plot = true;
+                std::cout << "Plots not implemented yet" << std::endl;
                 break;
             case 'c':
                 write_chains = true;
+                std::cout << "Chains not implemented yet" << std::endl;
                 break;
             case 'l':
                 write_log = true;
+                std::cout << "Log not implemented yet" << std::endl;
                 break;
             default:
                 how_to_use();
@@ -102,16 +98,8 @@ int main(int argc, char *argv[]) {
         } else {
             std::cerr << "Failed to create directory: " << res_dir << std::endl;
         }
-        // if (!fs::exists(res_dir)) {
-        //     if (fs::create_directory(res_dir)) {
-                // std::cout << "Directory created successfully: " << res_dir << std::endl;
-        //     } else {
-        //         std::cerr << "Failed to create directory: " << res_dir << std::endl;
-        //     }
-        // } else {
-        //     std::cout << "Directory already exists: " << res_dir << std::endl;
-        // }
         res_dir += "/";
+        std::cout << res_dir << std::endl;
     }
     
     // Setting chains parameters
@@ -169,19 +157,6 @@ int main(int argc, char *argv[]) {
 //     std::vector<double> L2 = data.getL2();
 //     std::vector<double> L3 = data.getL3();
 //     std::vector<double> L4 = data.getL4();
-
-
-//     if(mode.compare("association") == 0) {
-//         for (std::vector<int>::size_type i = 0; i < run1.size(); i++)
-//         {        
-//             outfile1 << run1[i] <<"\t"<< event1[i] <<"\t"<< trigger1[i] <<"\t"<< indx1[i] <<"\t"
-//             << L1[i] <<"\t"<< L2[i] <<"\t"  // L and L_std
-//             << L3[i] <<"\t"<< L4[i]  // x and x_std
-//             << std::endl;
-//         }
-
-//     } 
-//     outfile1.close();
 
 //     throw std::invalid_argument("fine test ");
 
@@ -264,10 +239,10 @@ int main(int argc, char *argv[]) {
         m.FindMode(m.GetBestFitParameters());
 
         // Write MCMC on root file (The full chains are not needed for the position reconstruction)
-        if (write_chains) {
-            m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
-            // m.WriteMarkovChain(res_dir + index + "_mcmc.root", "RECREATE", true, true);
-        }
+        // if (write_chains) {
+        //     m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
+            // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
+        // }
 
         // if (plot) {
         //     // Draw all marginalized distributions into a PDF file
@@ -373,16 +348,6 @@ int main(int argc, char *argv[]) {
     std::vector<int> event = data.getEvent();
     std::vector<int> trigger = data.getTrigger();
     std::vector<int> indx = data.getIndx();
-
-    // std::cout << "CHECK 1" << std::endl;
-
-    // std::cout << "L_mean " << L_mean.size() << std::endl;
-    // std::cout << "L_std " << L_std.size() << std::endl;
-    // std::cout << "x_mean " << x_mean.size() << std::endl;
-    // std::cout << "x_std " << x_std.size() << std::endl;
-    // std::cout << "y_mean " << y_mean.size() << std::endl;
-    // std::cout << "y_std " << y_std.size() << std::endl;
-
 
 
     if(mode.compare("association") == 0) {
