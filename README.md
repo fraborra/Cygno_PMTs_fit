@@ -12,7 +12,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 
 1. **Clone the repository:**
     ```bash
-    git clone (https://github.com/fraborra/Cygno_PMTs_fit.git)
+    git clone https://github.com/fraborra/Cygno_PMTs_fit.git
     cd Cygno_PMTs_fit
     ```
 
