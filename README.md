@@ -58,6 +58,8 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 
     Ensure that each line follows this format to allow the runfit program to correctly parse and process the input data.
 
+    An example can be found in `golden_input.txt`
+
 1. **PMTcalibration:**
     The same as the association but with two more variables:
     - **x**: x position of the cluster in the GEM plane, in cm
@@ -82,10 +84,12 @@ Each line in the output file will have these fields separated by a tab.
 
 Each line in the output file will contain the calculated values of these parameters for the corresponding input data line. If the fit didn't converge for a row then all the parameters values will be set with a **-1**.
 
+An example can be found in `golden_out.txt`
+
 ## Authors and Contact
 
 - **Name:** Francesco Borra
 - **Email:** francesco.borra@uniroma3.it
 ## Credits
 
-Special thanks Stefano Piacentini.
+Special thanks to Stefano Piacentini.
