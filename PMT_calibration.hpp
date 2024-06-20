@@ -1,12 +1,12 @@
 //
-//  PMT_standard.hpp
+//  PMT_calibration.hpp
 //  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23
 //
-#ifndef PMT_association_hpp
-#define PMT_association_hpp
+#ifndef PMT_calibration_hpp
+#define PMT_calibration_hpp
 
 #include <BAT/BCModel.h>
 
@@ -21,16 +21,16 @@
 #include "TH1F.h"
 
 #include "Math/ProbFunc.h"
-// #include "helper.hpp"
 
-
-class PMTassociation : public BCModel
+class PMTcalibration : public BCModel
 {
 public:
 
-    PMTassociation(const std::string& mode, int nth, int index, double *L);
+    PMTcalibration(const std::string& mode, int nth, int index, 
+                   double *L1_inp, double *L2_inp, double *L3_inp, double *L4_inp, 
+                   double x, double y);
 
-    ~PMTassociation(){};
+    ~PMTcalibration(){};
 
     double LogLikelihood(const std::vector<double>& pars);
 
@@ -67,11 +67,14 @@ private:
 
     double zGEM = 19;
 
-    double data[4] = {0.};
+    double L1[4] = {0.};
+    double L2[4] = {0.};
+    double L3[4] = {0.};
+    double L4[4] = {0.};
 
     double xTrue = 0.;
     double yTrue = 0.;
 
 };
 
-#endif /* PMT_standard_hpp */
+#endif /* PMT_calibration_hpp */
