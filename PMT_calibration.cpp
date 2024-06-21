@@ -13,41 +13,43 @@
 
 
 // PMTfit class
-PMTcalibration::PMTcalibration(const std::string& mode, int nth, 
-               int index, double *L1_inp, double *L2_inp, double *L3_inp, double *L4_inp, 
-               double x, double y) : BCModel(mode)
+PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, int index, 
+                const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
+                const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y): BCModel(mode)
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 20000;
-    cmax = 2;
+    Lmax = 40000; // if trying to fit higher energy spot/longer integrals must be modified!
+    // The prior for the c_i can be tweaked to reduce parameter space
+    cmax = 10;
     index_ = index;
-    xTrue = x;
-    yTrue = y;
-
+    nPoints = nP;
     // std::cout << "Dentro il fit" << std::endl << std::endl;
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < Npoints; ++i) {
+        data[1].push_back(L1_inp[i]);
+        data[2].push_back(L2_inp[i]);
+        data[3].push_back(L3_inp[i]);
+        data[4].push_back(L4_inp[i]);
 
-        L1[i] = L1_inp[i];
-        L2[i] = L2_inp[i];
-        L3[i] = L3_inp[i];
-        L4[i] = L4_inp[i];
-        // std::cout << "L"<<i<<":\t" << L[i] << "\t";
+        xTrue.push_back(x[i]);
+        yTrue.push_back(y[i]);
     }
-        // std::cout << std::endl;
         
     //DEFINING parameters
      if (mode_.compare("PMTcalibration") == 0){
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").Fix(4000.0); // just to have c_i values smaller, can put any value, 
                                        // we are only interested in the c_i ratios
-        AddParameter("x", 0, 33, "x", "[cm]");
-        AddParameter("y", 0, 33, "y", "[cm]"); 
-        //  FIXING x and y COORDINATES         
-        GetParameter("x").Fix(xTrue);
-        GetParameter("y").Fix(yTrue);
+        
+        for(unsigned int i=0; i < Npoints; i++) {
+            AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
+            AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
+            //  FIXING x and y COORDINATES         
+            GetParameter("x_"+std::to_string(i)).Fix(xTrue[i]);
+            GetParameter("y_"+std::to_string(i)).Fix(yTrue[i]);
+        }
 
         // The prior for the c_i can be tweaked to reduce parameter space
         AddParameter("c1", 0., cmax, "c1", "[counts]");
@@ -69,21 +71,24 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
 
     double LL = 0.;
     
-    for(unsigned int j=0; j<4; j++) {
-        double Lj = data[j];  // here the data
-        // std::cout<< "i: " << j << "\t" << "L: "<< Lj << std::endl;
+    // NEED TO RESTORE A LOOP FOR NPOINTS
+    for(unsigned int i=0; i<nPoints; i++) { // i == nPoint index
 
-        double sLj = 0.1*Lj; // for now set to 10% of the integral
-        
-        int k = 3 +j;  // index for c_i (pars[3] is c_1 and so on)
-        // std::cout<< "k: " << k << "\t" << "cj: "<< pars[k] << std::endl;
-        std::cout.flush();
-        double tmp = D2(pars[1], pars[2], j);                // compute r_i**2
-        LL += BCMath::LogGaus(Lj,                             // x, namely Lj
-                             (pars[0]*pars[k])/(pow(tmp, 2)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
-                             sLj,                             // sigma
-                             true                             // norm factor
-                             );
+        for(unsigned int j=0; j<4; j++) { // j == PMT index
+            double Lij = data[j][i];  // here the data
+
+            double sLij = 0.1*Lij; // for now set to 10% of the integral
+            
+            // int k = 1+ 2*nPoints +j;  // index for c_i (pars[3] is c_1 if nPoints=1 and so on)
+            int k = pars.size()-4 + j;
+
+            double tmp = D2(pars[1 + 2*i], pars[2 + 2*i], j);     // compute r_i**2
+            LL += BCMath::LogGaus(Lij,                            // x, namely Lj
+                                 (pars[0]*pars[k])/(pow(tmp, 2)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
+                                 sLij,                            // sigma
+                                 true                             // norm factor
+                                 );
+        }
     }
 
     return LL;
@@ -93,21 +98,23 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
 double PMTcalibration::LogAPrioriProbability(const std::vector<double>& pars) {
     double LL = 0.;
         //flat priors everywhere
-        if(pars[0]<0 || pars[0]>Lmax) {
-            LL += log(0.0);
-        } else {
-            LL += log(1.0/Lmax);
-        }
-    
-    for(unsigned int i=1; i<3; i++) {
+
+    // L prior
+    if(pars[0]<0 || pars[0]>Lmax) {
+        LL += log(0.0);
+    } else {
+        LL += log(1.0/Lmax);
+    }
+    // x_i and y_i prior
+    for(unsigned int i=1; i < 1 + nPoints*2; i++) {
         if(pars[i]<0 || pars[i]>33.) {
             LL += log(0.0);
         } else {
             LL += log(1.0/33.);
         }
     }
-    
-    for(unsigned int j=3; j<7; j++){
+    // c_i prior
+    for(unsigned int j=(pars.size()-4); j<pars.size(); j++){
             if(pars[j]<0. || pars[j]>cmax) {
                 LL += log(0.0);
             } else {

@@ -74,4 +74,4 @@ private:
 
 };
 
-#endif /* PMT_standard_hpp */
+#endif /* PMT_association_hpp */
