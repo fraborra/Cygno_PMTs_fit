@@ -15,7 +15,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     git clone https://github.com/fraborra/Cygno_PMTs_fit.git
     cd Cygno_PMTs_fit
     ```
-
+    
 2. **Install dependencies:**
     Make sure BAT is installed and properly configured.
 
@@ -28,18 +28,22 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 1. **Run the main script:**
     To run the program use the following use the following command in the terminal: 
     ```bash
-    ./runfit -i input.txt -o output.txt -s 0 -e 10 -m association
+    ./runfit configuration.conf
     ```
-    Where the needed flag are:
-    - `-i  input.txt` : indicates the input file to use for the program.
-    - `-o output.txt`: indicates the output file where the results will be saved.
-    - `-s 0`: defines the starting row of the input file (0 first row).
-    - `-e 10`: defines the ending row of the input file.
-    - `-m association`: specifies the mode of the program (between **association** and **PMTcalibration**).
-    And the optionals:
-    - `-c`: print the MCMC chains of the parameters.
-    - `-p`: saves some plots for the MCMC of the parameters.
-    - `-l`: saves the log files.
+    Where the `.conf` is the configuration file (examples in `calibration.conf` and `association.conf`).
+
+    The options are:
+    - `mode`: to specify the mode of the program (between **association** and **PMTcalibration**).
+    - `input_file`: name of the input file to use for the program.
+    - `output_file`: indicates the output file where the results will be saved.
+    - `start_ind`: defines the starting row of the input file (0 first row).
+    - `end_ind`: defines the ending row of the input file (-1 until the end).
+    - `plot`: option to save some plots for the MCMC of the parameters (use only for 1 integration at time).
+    - `write_log`: option to save the log files (use only for 1 integration at time).
+    - `write_chains`: option to save MCMC chains of the parameters (use only for 1 integration at time).
+    - `print_summary`: option to print the summary of the MCMC integration on the screen (false to reduce compute time).
+    - `nPoints`: option to select how many events to integrate at once (usually 1 for the **association** and 4 for the **PMTcalibration**).
+
 
 ## Input File Format
 1. **association:**
@@ -67,6 +71,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 
 ## Output File Format
 
+1. **association:**
 The output file will contain a series of lines, each representing processed data with the following fields:
 
 - **run**: The run number.
@@ -86,10 +91,27 @@ Each line in the output file will contain the calculated values of these paramet
 
 An example can be found in `golden_out.txt`
 
+2. **PMTcalibration:**
+   
+- **run**: The run number.
+- **event**: The event number. (not useful, it is the one of the first event)
+- **trigger**: The trigger number. (not useful, it is the one of the first event)
+- **peak index**: The index indicating the position of the peak in the waveform. (not useful, it is the one of the first event)
+- **c1**: The value of parameter c1.
+- **c1std**: The standard deviation of parameter c1.
+- **c2**: The value of parameter c2.
+- **c2std**: The standard deviation of parameter c2.
+- **c3**: The value of parameter c3.
+- **c3std**: The standard deviation of parameter c3.
+- **c4**: The value of parameter c4.
+- **c4std**: The standard deviation of parameter c4.
+
+=======
+
 ## Authors and Contact
 
 - **Name:** Francesco Borra
 - **Email:** francesco.borra@uniroma3.it
 ## Credits
 
-Special thanks to Stefano Piacentini.
+Special thanks Stefano Piacentini.

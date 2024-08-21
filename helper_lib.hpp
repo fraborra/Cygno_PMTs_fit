@@ -5,9 +5,28 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <map>
 #include <stdexcept>
 
 void how_to_use();
+
+// config structure
+struct Config {
+    std::string mode;
+    std::string input_file;
+    int start_ind = 0;
+    int end_ind = 0;
+    int nPoints = 0;
+    std::string output_file = "out.txt";
+    bool plot = false;
+    bool write_chains = false;
+    bool write_log = false;
+    bool print_summary = false;
+};
+
+// function to read config file
+Config readConfigFile(const std::string& filename);
+
 
 // class for the reading of the input file
 class DataReader {

@@ -1,38 +1,31 @@
 //
-//  PMT_standard.cpp
+//  PMT_association.cpp
 //  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23.
 //
 
-#include "PMT_standard.hpp"
+#include "PMT_association.hpp"
 #include <TMath.h>
 #include <BAT/BCMath.h>
 #include <cmath>
 
 
 // PMTfit class
-PMTfit::PMTfit(const std::string& mode, int nth, 
-               int index, double *L, double x, double y) : BCModel(mode)
+PMTassociation::PMTassociation(const std::string& mode, int nth, 
+                               double *L) : BCModel(mode)
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 20000;
+    Lmax = 40000; //The smaller the smaller the parameter space
     cmax = 2;
-    index_ = index;
-    xTrue = x;
-    yTrue = y;
-
-    // std::cout << "Dentro il fit" << std::endl << std::endl;
 
     for (int i = 0; i < 4; ++i) {
         data[i] = L[i];
-        // std::cout << "L"<<i<<":\t" << L[i] << "\t";
     }
-        // std::cout << std::endl;
-        
+
     //DEFINING parameters
     if (mode_.compare("association") == 0) {
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
@@ -40,32 +33,35 @@ PMTfit::PMTfit(const std::string& mode, int nth,
         AddParameter("x", 0, 33, "x", "[cm]");
         AddParameter("y", 0, 33, "y", "[cm]");
         
+
+        // PMTcalibrations can be removed and added a readout from a config file
         AddParameter("c1", 0., cmax, "c1", "[counts]");
         AddParameter("c2", 0., cmax, "c2", "[counts]");
         AddParameter("c3", 0., cmax, "c3", "[counts]");
         AddParameter("c4", 0., cmax, "c4", "[counts]");
         
-        //  FIXING PMT CALIBRATION         
+        //  FIXING PMT CALIBRATION        
         GetParameter("c1").Fix(1.0);
         GetParameter("c2").Fix(0.965);
         GetParameter("c3").Fix(0.860);
         GetParameter("c4").Fix(0.827);
 
-    } else if (mode_.compare("PMTcalibration") == 0){
-        AddParameter("L", 0, Lmax, "L", "[a.u.]");
-        GetParameter("L").Fix(40000.0); // just to have c_i values smaller, can put any value, 
-                                        // we are only interested in the c_i ratios
-        AddParameter("x", 0, 33, "x", "[cm]");
-        AddParameter("y", 0, 33, "y", "[cm]"); 
-        //  FIXING x and y COORDINATES         
-        GetParameter("x").Fix(xTrue);
-        GetParameter("y").Fix(yTrue);
+    // All of that can be removed
+    // } else if (mode_.compare("PMTcalibration") == 0){
+    //     AddParameter("L", 0, Lmax, "L", "[a.u.]");
+    //     GetParameter("L").Fix(40000.0); // just to have c_i values smaller, can put any value, 
+    //                                     // we are only interested in the c_i ratios
+    //     AddParameter("x", 0, 33, "x", "[cm]");
+    //     AddParameter("y", 0, 33, "y", "[cm]"); 
+    //     //  FIXING x and y COORDINATES         
+    //     GetParameter("x").Fix(xTrue);
+    //     GetParameter("y").Fix(yTrue);
 
-        // The prior for the c_i can be tweaked to reduce parameter space
-        AddParameter("c1", 0., cmax, "c1", "[counts]");
-        AddParameter("c2", 0., cmax, "c2", "[counts]");
-        AddParameter("c3", 0., cmax, "c3", "[counts]");
-        AddParameter("c4", 0., cmax, "c4", "[counts]");
+    //     // The prior for the c_i can be tweaked to reduce parameter space
+    //     AddParameter("c1", 0., cmax, "c1", "[counts]");
+    //     AddParameter("c2", 0., cmax, "c2", "[counts]");
+    //     AddParameter("c3", 0., cmax, "c3", "[counts]");
+    //     AddParameter("c4", 0., cmax, "c4", "[counts]");
 
     } else {
         throw std::runtime_error("Unknown model '"+mode_+"'.\n");
@@ -77,7 +73,7 @@ PMTfit::PMTfit(const std::string& mode, int nth,
 
 
 // Compute Likelihood
-double PMTfit::LogLikelihood(const std::vector<double>& pars) {
+double PMTassociation::LogLikelihood(const std::vector<double>& pars) {
 
     double LL = 0.;
     
@@ -90,7 +86,7 @@ double PMTfit::LogLikelihood(const std::vector<double>& pars) {
         int k = 3 +j;  // index for c_i (pars[3] is c_1 and so on)
         // std::cout<< "k: " << k << "\t" << "cj: "<< pars[k] << std::endl;
         std::cout.flush();
-        double tmp = D2(pars[1], pars[2], j);                // compute r_i**2
+        double tmp = D2(pars[1], pars[2], j);                 // compute r_i**2
         LL += BCMath::LogGaus(Lj,                             // x, namely Lj
                              (pars[0]*pars[k])/(pow(tmp, 2)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
                              sLj,                             // sigma
@@ -102,7 +98,7 @@ double PMTfit::LogLikelihood(const std::vector<double>& pars) {
 }
 
 // Define prior
-double PMTfit::LogAPrioriProbability(const std::vector<double>& pars) {
+double PMTassociation::LogAPrioriProbability(const std::vector<double>& pars) {
     double LL = 0.;
         //flat priors everywhere
         if(pars[0]<0 || pars[0]>Lmax) {
@@ -130,7 +126,7 @@ double PMTfit::LogAPrioriProbability(const std::vector<double>& pars) {
 }
 
 // Function to calculate distance between the PMT and the chosen position
-double PMTfit::D2(double x, double y, int i) {
+double PMTassociation::D2(double x, double y, int i) {
     if (i == 0) {
         return (x - x1)*(x - x1) + (y - y1)*(y - y1) + zGEM*zGEM;
     } else if (i == 1) {

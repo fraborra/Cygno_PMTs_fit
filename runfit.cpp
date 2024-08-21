@@ -12,66 +12,33 @@
 #include <string>
 #include <stdexcept>
 
-#include "PMT_standard.hpp"
+#include "PMT_association.hpp"
+#include "PMT_calibration.hpp"
 #include "helper_lib.hpp"
 
 int main(int argc, char *argv[]) {
 
-    int option;
-    std::string mode;
-    std::string input_file;
-    std::string res_dir;
-    int start_ind = -1;
-    int end_ind = -1;
-    std::string output_file;
-    bool plot = false;
-    bool write_chains = false;
-    bool write_log = false;
-    
-    // Parsing arguments
-    while ((option = getopt(argc, argv, "hm:i:s:e:o:pcl")) != -1) {
-        switch (option) {
-            case 'h':
-                how_to_use();
-                return 0;
-            case 'm':
-                mode = optarg;
-                break;
-            case 'i':
-                input_file = optarg;
-                break;
-            case 's':
-                start_ind = std::stoi(optarg);
-                break;
-            case 'e':
-                end_ind = std::stoi(optarg);
-                break;
-            case 'o':
-                output_file = optarg;
-                break;
-            case 'p':
-                plot = true;
-                std::cout << "Plots not implemented yet" << std::endl;
-                break;
-            case 'c':
-                write_chains = true;
-                std::cout << "Chains not implemented yet" << std::endl;
-                break;
-            case 'l':
-                write_log = true;
-                std::cout << "Log not implemented yet" << std::endl;
-                break;
-            default:
-                how_to_use();
-                return 1;
-        }
-    }
-    
-    if (mode.empty() || input_file.empty() || start_ind == -1 || output_file.empty() || end_ind == -1) {
-        std::cerr << "Missing required options." << std::endl;
-        how_to_use();
+    if (argc < 2) {
+        std::cerr << "Error: you need to specify the config file." << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl;
         return 1;
     }
+
+    std::string configFile = argv[1];
+    Config config = readConfigFile(configFile);
+
+    std::string mode = config.mode;
+    std::string input_file = config.input_file;
+    int start_ind = config.start_ind;
+    int end_ind = config.end_ind;
+    std::string output_file = config.output_file;
+    bool plot = config.plot;
+    bool write_chains = config.write_chains;
+    bool write_log = config.write_log;
+    bool print_summary = config.print_summary;
+    int nPoints = config.nPoints;
+
+    std::string res_dir;
 
     const std::string known_mode[2] = {"association", "PMTcalibration"};
                                         // MAYBE ADD ONE THAT ONLY GIVES THE CHAINS AND POSTERIORS
@@ -102,25 +69,37 @@ int main(int argc, char *argv[]) {
         std::cout << res_dir << std::endl;
     }
     
-    // Setting chains parameters
-    int Nch, NIter;
-    if(mode.compare("association") == 0) {
-        Nch = 6;           //number of parallel MCMC chains
-        NIter = 1*10000;   //number of step per chain
-    } else if (mode.compare("PMTcalibration") == 0){
-        Nch = 12;          //number of parallel MCMC chains
-        NIter = 1*10000;   //number of step per chain
-    } else {
-        throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");
+    // Reading input file
+    DataReader data(input_file, mode);
+
+    std::vector<int>::size_type index_max = data.getRun().size();
+    if (end_ind == -1)
+    {
+        if(mode.compare("association") == 0) {
+            end_ind = index_max;
+        }
+        else if(mode.compare("PMTcalibration") == 0) {
+            end_ind = index_max - index_max%nPoints;
+        }
+
+    } else if (index_max<end_ind)
+    {
+        if(mode.compare("association") == 0) {
+            end_ind = index_max;
+        }
+        else if(mode.compare("PMTcalibration") == 0) {
+            end_ind = index_max - index_max%nPoints;
+        }
     }
 
-    // Preparing output variables
+    // prepare output variables
     std::vector<double> L_mean;
     std::vector<double> L_std;
     std::vector<double> x_mean;
     std::vector<double> x_std;
     std::vector<double> y_mean;
     std::vector<double> y_std;
+
     std::vector<double> c1_mean;
     std::vector<double> c1_std;
     std::vector<double> c2_mean;
@@ -130,143 +109,73 @@ int main(int argc, char *argv[]) {
     std::vector<double> c4_mean;
     std::vector<double> c4_std;
 
+// ==================================== START =========================//
+    if(mode.compare("association") == 0) { // START OF PMT ASSOCIATION if
+        // Setting chains parameters
+        int Nch = 6;           //number of parallel MCMC chains
+        int NIter = 1*10000;   //number of step per chain
 
-    // Reading input file
-    DataReader data(input_file, mode);
+        // BEGIN OF THE FIT LOOP
+        for (int index = start_ind; index < end_ind; index++) {
+            // import the L from the array
+            double L[4] = {0.};
+            L[0] = data.getL1()[index];
+            L[1] = data.getL2()[index];
+            L[2] = data.getL3()[index];
+            L[3] = data.getL4()[index];
 
-    std::vector<int>::size_type index_max = data.getRun().size();
-    if (end_ind == -1)
-    {
-        end_ind = index_max;
+            // INITIALIZE THE MODEL
+            PMTassociation m(mode, Nch, L);
 
-    } else if (index_max<end_ind)
-    {
-        end_ind = index_max;
-    }
-    
-// ======== TESTSTTSTTSTSTSTST
-
-//     std::ofstream outfile1;
-//     outfile1.open(output_file, std::ios_base::app);
-
-//     std::vector<int> run1 = data.getRun();
-//     std::vector<int> event1 = data.getEvent();
-//     std::vector<int> trigger1 = data.getTrigger();
-//     std::vector<int> indx1 = data.getIndx();
-//     std::vector<double> L1 = data.getL1();
-//     std::vector<double> L2 = data.getL2();
-//     std::vector<double> L3 = data.getL3();
-//     std::vector<double> L4 = data.getL4();
-
-//     throw std::invalid_argument("fine test ");
-
-// // ======== TESTSTTSTTSTSTSTST
-    
-    // BEGIN OF THE FIT LOOP
-    for (int index = start_ind; index < end_ind; index++)
-    {
-        double x, y;
-        // import the L from the array
-        double L[4] = {0.};
-        L[0] = data.getL1()[index];
-        L[1] = data.getL2()[index];
-        L[2] = data.getL3()[index];
-        L[3] = data.getL4()[index];
-
-// // ======== TESTSTTSTTSTSTSTST
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     std::cout << "L:\t" << L[i] << "\t";
-        // }
-        // std::cout << std::endl;
-        // std::cout << "TUTTO L: " << L << std::endl;
-// // ======== TESTSTTSTTSTSTSTST
-
-        if(mode.compare("association") == 0) {
-            x = 0.;
-            y = 0.;
-        } else if (mode.compare("PMTcalibration") == 0)
-        {
-            x = data.getXtrue()[index];
-            y = data.getYtrue()[index];
-        } else {
-            throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");
-        }
-
-        // INITIALIZE THE MODEL
-        PMTfit m(mode, Nch, index, L, x, y);
-
-        // Creating Logfile // LOGFILE NOT IMPLEMENTED YET
-        // if (write_log) {
-            // m.BCLog::OpenLog(res_dir + m.GetSafeName() + "_" + index + "_log.txt", BCLog::detail, BCLog::detail);
-        // }
-
-        // Setting MCMC algorithm and precision
-        m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
-        m.SetPrecision(BCEngineMCMC::kMedium);
-        // if (write_log) {
-        //     BCLog::OutSummary("Model created");
-        // }
-        // Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
-        if(mode.compare("association") == 0) {
+            // Setting MCMC algorithm and precision
+            m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
+            m.SetPrecision(BCEngineMCMC::kMedium);
+            if (write_log) {
+                BCLog::OutSummary("Model created");
+            }
+            // Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
             m.SetNIterationsPreRunMax(100000);
-        }
-        
-        if(mode.compare("PMTcalibration") == 0) {
-            m.SetNIterationsPreRunMax(1000000);
-            std::vector<double> x0;
-            x0.push_back(100.);    // L
-            for(int i=0; i<2; i++) { // x and y
-                x0.push_back(16.5);
-                x0.push_back(16.5);
-            }
-            for (int i =0; i<4; i++){
-                x0.push_back(1.0); // The 4 PMT "calibrations"
-            }
-            m.SetInitialPositions(x0);
-        }
-        
-        // Setting MC run iterations and number of parallel chains
-        m.SetNIterationsRun(NIter);
-        m.SetNChains(Nch);
+
+            // Setting MC run iterations and number of parallel chains
+            m.SetNIterationsRun(NIter);
+            m.SetNChains(Nch);
 
 // ===============================================================
-        // Run MCMC, marginalizing posterior
-        m.MarginalizeAll();
+            // Run MCMC, marginalizing posterior
+            m.MarginalizeAll();
 // ===============================================================
 
-        // Run mode finding; by default using Minuit
-        m.FindMode(m.GetBestFitParameters());
+            // Run mode finding; by default using Minuit
+            m.FindMode(m.GetBestFitParameters());
 
-        // Write MCMC on root file (The full chains are not needed for the position reconstruction)
-        // if (write_chains) {
-        //     m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
-            // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
-        // }
+            // Write MCMC on root file (The full chains are not needed for the position reconstruction)
+            if (write_chains) {
+                m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
+                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
+            }
 
-        // if (plot) {
-        //     // Draw all marginalized distributions into a PDF file
-        //     m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + index + "_plots.pdf");
-        
-        //     // Print summary plots
-        //     m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + index + "_parameters.pdf");
-        //     m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + index + "_correlation.pdf");
-        //     m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + index + "_correlationMatrix.pdf");
-        //     m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
-        // }
-        
-        // Print results of the analysis
-        // m.PrintSummary();
+            if (plot) {
+                // Draw all marginalized distributions into a PDF file
+                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
+            
+                // Print summary plots
+                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
+                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
+                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
+                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
+            }
+            
+            // Print results of the analysis
+            if (print_summary) {m.PrintSummary();}
 
-        // ==================
-        // RESULTS
-        std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
+            //==================
+            // RESULTS
+            std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
 
-        // Check if the pre run has converged:
-        int status = m.GetNIterationsConvergenceGlobal();
+            // Check if the pre run has converged:
+            int status = m.GetNIterationsConvergenceGlobal();
 
-        // start results storing
-        if(mode.compare("association") == 0) {
+            // start results storing
             if (status>0){ // If prerun converged then store the results
                 BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
                 BCH1D posteriorx = m.GetMarginalized(H1Indices[1]);
@@ -292,9 +201,108 @@ int main(int argc, char *argv[]) {
                 y_std.push_back(-1);
 
                 std::cout << "association, status < 0" << std::endl;
-
             }
-        } else if(mode.compare("PMTcalibration") == 0){
+
+            if (index % 100 == 0) {// print every 100 index the iteration number
+                std::cout << "Iteration number: " << index << std::endl;
+            }
+        } // end for loop over row indices
+    } // END PMT ASSOCIATION if
+
+    // START PMT CALIBRATION IF
+    else if (mode.compare("PMTcalibration") == 0) { 
+        // Setting chains parameters
+        int Nch = 12;          //number of parallel MCMC chains
+        int NIter = nPoints*40000;   //number of step per chain
+
+        // BEGIN OF THE FIT LOOP
+        for (int index = start_ind; index < end_ind; index += nPoints) {
+
+            // prepare helper variables
+            std::vector<double> L1;
+            std::vector<double> L2;
+            std::vector<double> L3;
+            std::vector<double> L4;
+            std::vector<double> x;
+            std::vector<double> y;
+
+            // loop over the nPoints points to fit
+            for(int point = 0; point<nPoints; point++){
+                L1.push_back(data.getL1()[index+point]);
+                L2.push_back(data.getL2()[index+point]);
+                L3.push_back(data.getL3()[index+point]);
+                L4.push_back(data.getL4()[index+point]);
+
+                x.push_back(data.getXtrue()[index+point]);
+                y.push_back(data.getYtrue()[index+point]);
+            }
+
+            // INITIALIZE THE MODEL
+            PMTcalibration m(mode, Nch, nPoints, L1, L2, L3, L4, x, y);
+
+            // Setting MCMC algorithm and precision
+            m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
+            m.SetPrecision(BCEngineMCMC::kMedium);
+            if (write_log) {
+                BCLog::OutSummary("Model created");
+            }
+
+            // Setting prerun iterations to 10^6
+            m.SetNIterationsPreRunMax(1000000);
+            
+            // Setting initial position for the parameters ## NEED TO BE checked
+            std::vector<double> x0;
+            x0.push_back(1000.);    // L
+            for(int i=0; i<nPoints; i++) { // x and y
+                x0.push_back(x[i]);
+                x0.push_back(y[i]);
+            }
+            for (int i =0; i<4; i++){// The 4 PMT "calibrations"
+                x0.push_back(1.0);
+            }
+
+            std::cout << "lunghezza di x0: " << x0.size() <<std::endl;
+            std::cout << "Number of parameters: " << m.GetNParameters() << std::endl;
+            // m.SetInitialPositions(x0);
+
+            // Setting MC run iterations and number of parallel chains
+            m.SetNIterationsRun(NIter);
+            m.SetNChains(Nch);
+// ===============================================================
+            // Run MCMC, marginalizing posterior
+            m.MarginalizeAll();
+// ===============================================================
+
+            // Run mode finding; by default using Minuit
+            m.FindMode(m.GetBestFitParameters());
+
+            // Write MCMC on root file (The full chains are not needed for the position reconstruction)
+            if (write_chains) {
+                m.WriteMarkovChain("prova_mcmc_cal.root", "RECREATE");//, true, true);
+                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
+            }
+
+            if (plot) {
+                // Draw all marginalized distributions into a PDF file
+                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
+            
+                // Print summary plots
+                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
+                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
+                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
+                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
+            }
+            
+            // Print results of the analysis
+            if (print_summary) {m.PrintSummary();}
+
+            // ========================================================================================================
+            // STORE RESULTS
+            std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
+
+            // Check if the pre run has converged:
+            int status = m.GetNIterationsConvergenceGlobal();
+
             if (status>0){ // If prerun converged then store the results
                 BCH1D posteriorc1 = m.GetMarginalized(H1Indices[0]);
                 BCH1D posteriorc2 = m.GetMarginalized(H1Indices[1]);
@@ -328,19 +336,19 @@ int main(int argc, char *argv[]) {
                 c4_mean.push_back(-1);
                 c4_std.push_back(-1);
                 std::cout << "calibration, status < 0" << std::endl;
+            } // end store results
 
+            if (index % 25 == 0) {// print every 25 index the iteration number
+                std::cout << "Iteration number: " << index << std::endl;
             }
-        } // end store results
 
-        if (index % 100 == 0) {
-            std::cout << "Iteration number: " << index << std::endl;
-        }
-
-
-    } // end for loop over row indices
+        }// end for loop over indices (calibration)
+    } // END PMT CALIBRATION if
+    else { throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");}
 
 
-    // print results on file
+
+    // PRINT RESULTS ON FILE
     std::ofstream outfile;
     outfile.open(output_file, std::ios_base::trunc);
 
@@ -351,42 +359,46 @@ int main(int argc, char *argv[]) {
 
 
     if(mode.compare("association") == 0) {
-        for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++)
+        std::vector<int>::size_type control = L_mean.size();
+        int i = 0;
+        for (int index = start_ind; index < end_ind; index++)
         {        
-            outfile << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+            outfile << run[index] <<"\t"<< event[index] <<"\t"<< trigger[index] <<"\t"<< indx[index] <<"\t"
             << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
             << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
             << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
             << std::endl;
+            i++;
+            if (i >= control) {
+                break;
+            }
+
         }
 
     } else if (mode.compare("PMTcalibration") == 0) {
-        for (std::vector<int>::size_type i = 0; i < c1_mean.size(); i++)
+        std::vector<int>::size_type control = c1_mean.size();
+        int i = 0;
+        for (int index = start_ind; index < end_ind; index += nPoints) // NEED TO CHOOSE THE OUTPUT
         {        
-            outfile << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
+            outfile << run[index] <<"\t"<< event[index] <<"\t"<< trigger[index] <<"\t"<< indx[index] <<"\t"
             << c1_mean[i] <<"\t"<< c1_std[i] <<"\t"  // c1 and std
             << c2_mean[i] <<"\t"<< c2_std[i] <<"\t"  // c2 and std
             << c3_mean[i] <<"\t"<< c3_std[i] <<"\t"  // c3 and std
             << c4_mean[i] <<"\t"<< c4_std[i]         // c4 and std
             << std::endl;
+            i++;
+            if (i >= control) {
+                break;
+            }
         }            
     }
     outfile.close();
 
-    // if (write_log) {
-    //     // Close log file
-    //     BCLog::OutSummary("Exiting");
-    //     BCLog::CloseLog();
-    // }
-
-    
-    // for (std::vector<int>::size_type i = 0; i < L_mean.size(); i++) {        
-    //     std::cout << run[i] <<"\t"<< event[i] <<"\t"<< trigger[i] <<"\t"<< indx[i] <<"\t"
-    //     << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
-    //     << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
-    //     << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
-    //     << std::endl;
-    // }
+    if (write_log) {
+        // Close log file
+        BCLog::OutSummary("Exiting");
+        BCLog::CloseLog();
+    }
 
     return 0;
 }

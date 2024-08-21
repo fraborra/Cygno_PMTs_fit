@@ -1,12 +1,12 @@
 //
-//  PMT_standard.hpp
+//  PMT_calibration.hpp
 //  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23
 //
-#ifndef PMT_standard_hpp
-#define PMT_standard_hpp
+#ifndef PMT_calibration_hpp
+#define PMT_calibration_hpp
 
 #include <BAT/BCModel.h>
 
@@ -21,16 +21,16 @@
 #include "TH1F.h"
 
 #include "Math/ProbFunc.h"
-// #include "helper.hpp"
 
-
-class PMTfit : public BCModel
+class PMTcalibration : public BCModel
 {
 public:
 
-    PMTfit(const std::string& mode, int nth, int index, double *L, double x, double y);
+    PMTcalibration(const std::string& mode, int nth, int nPoints, 
+                   const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
+                   const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y);
 
-    ~PMTfit(){};
+    ~PMTcalibration(){};
 
     double LogLikelihood(const std::vector<double>& pars);
 
@@ -42,8 +42,7 @@ private:
     double Lmax;
     double cmax;
     std::string mode_;
-    int index_;
-
+    unsigned int nPoints;
 
     // prior parameters
     double L_mean = 0;
@@ -67,11 +66,11 @@ private:
 
     double zGEM = 19;
 
-    double data[4] = {0.};
+    std::vector<std::vector<double>> data {4};
 
-    double xTrue = 0.;
-    double yTrue = 0.;
+    std::vector<double> xTrue;
+    std::vector<double> yTrue;
 
 };
 
-#endif /* PMT_standard_hpp */
+#endif /* PMT_calibration_hpp */
