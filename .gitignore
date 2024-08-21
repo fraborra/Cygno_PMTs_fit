@@ -3,7 +3,7 @@
 *.root
 *.txt
 #others
-*ipynb
+*.ipynb
 
 # Compiled object files
 *.o
@@ -32,6 +32,7 @@
 *.i*86
 *.x86_64
 *.hex
+runfit
 
 # Debug files
 *.dSYM/

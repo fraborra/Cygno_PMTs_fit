@@ -26,7 +26,7 @@ class PMTcalibration : public BCModel
 {
 public:
 
-    PMTcalibration(const std::string& mode, int nth, int nPoints, int index, 
+    PMTcalibration(const std::string& mode, int nth, int nPoints, 
                    const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
                    const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y);
 
@@ -42,9 +42,7 @@ private:
     double Lmax;
     double cmax;
     std::string mode_;
-    int index_;
     unsigned int nPoints;
-
 
     // prior parameters
     double L_mean = 0;
@@ -68,7 +66,7 @@ private:
 
     double zGEM = 19;
 
-    std::vector<std::vector<double>> data(4);
+    std::vector<std::vector<double>> data {4};
 
     std::vector<double> xTrue;
     std::vector<double> yTrue;

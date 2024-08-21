@@ -1,7 +1,48 @@
 #include "helper_lib.hpp"
+#include <sstream>
+
 void how_to_use() {
     std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
 }
+
+// Config file reading
+bool stringToBool(const std::string& str) {
+    return str == "true" || str == "1";
+}
+
+// function to read config file
+Config readConfigFile(const std::string& filename) {
+    Config config;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Impossible to open config file: " << filename << std::endl;
+        return config;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream ss(line);
+        std::string key, value;
+
+        if (std::getline(ss, key, '=') && std::getline(ss, value)) {
+            if (key == "mode") config.mode = value;
+            else if (key == "input_file") config.input_file = value;
+            else if (key == "start_ind") config.start_ind = std::stoi(value);
+            else if (key == "end_ind") config.end_ind = std::stoi(value);
+            else if (key == "nPoints") config.nPoints = std::stoi(value);
+            else if (key == "output_file") config.output_file = value;
+            else if (key == "plot") config.plot = stringToBool(value);
+            else if (key == "write_chains") config.write_chains = stringToBool(value);
+            else if (key == "write_log") config.write_log = stringToBool(value);
+            else if (key == "print_summary") config.print_summary = stringToBool(value);
+        }
+    }
+
+    file.close();
+    return config;
+}
+
 
 // DataReader class
 

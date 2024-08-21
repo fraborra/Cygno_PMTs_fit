@@ -13,7 +13,7 @@
 
 
 // PMTfit class
-PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, int index, 
+PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, 
                 const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
                 const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y): BCModel(mode)
 {
@@ -23,15 +23,14 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, int ind
     Lmax = 40000; // if trying to fit higher energy spot/longer integrals must be modified!
     // The prior for the c_i can be tweaked to reduce parameter space
     cmax = 10;
-    index_ = index;
     nPoints = nP;
     // std::cout << "Dentro il fit" << std::endl << std::endl;
 
-    for (int i = 0; i < Npoints; ++i) {
-        data[1].push_back(L1_inp[i]);
-        data[2].push_back(L2_inp[i]);
-        data[3].push_back(L3_inp[i]);
-        data[4].push_back(L4_inp[i]);
+    for (int i = 0; i < nPoints; ++i) {
+        data[0].push_back(L1_inp[i]);
+        data[1].push_back(L2_inp[i]);
+        data[2].push_back(L3_inp[i]);
+        data[3].push_back(L4_inp[i]);
 
         xTrue.push_back(x[i]);
         yTrue.push_back(y[i]);
@@ -43,7 +42,7 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, int ind
         GetParameter("L").Fix(4000.0); // just to have c_i values smaller, can put any value, 
                                        // we are only interested in the c_i ratios
         
-        for(unsigned int i=0; i < Npoints; i++) {
+        for(unsigned int i=0; i < nPoints; i++) {
             AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
             AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
             //  FIXING x and y COORDINATES         

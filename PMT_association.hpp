@@ -1,5 +1,5 @@
 //
-//  PMT_standard.hpp
+//  PMT_association.hpp
 //  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
@@ -28,7 +28,7 @@ class PMTassociation : public BCModel
 {
 public:
 
-    PMTassociation(const std::string& mode, int nth, int index, double *L);
+    PMTassociation(const std::string& mode, int nth, double *L);
 
     ~PMTassociation(){};
 
@@ -42,8 +42,6 @@ private:
     double Lmax;
     double cmax;
     std::string mode_;
-    int index_;
-
 
     // prior parameters
     double L_mean = 0;

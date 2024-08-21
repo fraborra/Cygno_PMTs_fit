@@ -18,64 +18,27 @@
 
 int main(int argc, char *argv[]) {
 
-    int option;
-    std::string mode;
-    std::string input_file;
-    std::string res_dir;
-    int start_ind = -1;
-    int end_ind = -1;
-    std::string output_file;
-    bool plot = false;
-    bool write_chains = false;
-    bool write_log = false;
-    bool print_summary = false;
-
-    int nPoints = 4;
-    
-    // Parsing arguments
-    while ((option = getopt(argc, argv, "hm:i:s:e:o:pcl")) != -1) {
-        switch (option) {
-            case 'h':
-                how_to_use();
-                return 0;
-            case 'm':
-                mode = optarg;
-                break;
-            case 'i':
-                input_file = optarg;
-                break;
-            case 's':
-                start_ind = std::stoi(optarg);
-                break;
-            case 'e':
-                end_ind = std::stoi(optarg);
-                break;
-            case 'o':
-                output_file = optarg;
-                break;
-            case 'p':
-                plot = true;
-                std::cout << "Plots not implemented yet" << std::endl;
-                break;
-            case 'c':
-                write_chains = true;
-                std::cout << "Chains not implemented yet" << std::endl;
-                break;
-            case 'l':
-                write_log = true;
-                std::cout << "Log not implemented yet" << std::endl;
-                break;
-            default:
-                how_to_use();
-                return 1;
-        }
-    }
-    
-    if (mode.empty() || input_file.empty() || start_ind == -1 || output_file.empty() || end_ind == -1) {
-        std::cerr << "Missing required options." << std::endl;
-        how_to_use();
+    if (argc < 2) {
+        std::cerr << "Error: you need to specify the config file." << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl;
         return 1;
     }
+
+    std::string configFile = argv[1];
+    Config config = readConfigFile(configFile);
+
+    std::string mode = config.mode;
+    std::string input_file = config.input_file;
+    int start_ind = config.start_ind;
+    int end_ind = config.end_ind;
+    std::string output_file = config.output_file;
+    bool plot = config.plot;
+    bool write_chains = config.write_chains;
+    bool write_log = config.write_log;
+    bool print_summary = config.print_summary;
+    int nPoints = config.nPoints;
+
+    std::string res_dir;
 
     const std::string known_mode[2] = {"association", "PMTcalibration"};
                                         // MAYBE ADD ONE THAT ONLY GIVES THE CHAINS AND POSTERIORS
@@ -112,13 +75,39 @@ int main(int argc, char *argv[]) {
     std::vector<int>::size_type index_max = data.getRun().size();
     if (end_ind == -1)
     {
-        end_ind = index_max;
+        if(mode.compare("association") == 0) {
+            end_ind = index_max;
+        }
+        else if(mode.compare("PMTcalibration") == 0) {
+            end_ind = index_max - index_max%nPoints;
+        }
 
     } else if (index_max<end_ind)
     {
-        end_ind = index_max;
+        if(mode.compare("association") == 0) {
+            end_ind = index_max;
+        }
+        else if(mode.compare("PMTcalibration") == 0) {
+            end_ind = index_max - index_max%nPoints;
+        }
     }
 
+    // prepare output variables
+    std::vector<double> L_mean;
+    std::vector<double> L_std;
+    std::vector<double> x_mean;
+    std::vector<double> x_std;
+    std::vector<double> y_mean;
+    std::vector<double> y_std;
+
+    std::vector<double> c1_mean;
+    std::vector<double> c1_std;
+    std::vector<double> c2_mean;
+    std::vector<double> c2_std;
+    std::vector<double> c3_mean;
+    std::vector<double> c3_std;
+    std::vector<double> c4_mean;
+    std::vector<double> c4_std;
 
 // ==================================== START =========================//
     if(mode.compare("association") == 0) { // START OF PMT ASSOCIATION if
@@ -126,12 +115,6 @@ int main(int argc, char *argv[]) {
         int Nch = 6;           //number of parallel MCMC chains
         int NIter = 1*10000;   //number of step per chain
 
-        std::vector<double> L_mean;
-        std::vector<double> L_std;
-        std::vector<double> x_mean;
-        std::vector<double> x_std;
-        std::vector<double> y_mean;
-        std::vector<double> y_std;
         // BEGIN OF THE FIT LOOP
         for (int index = start_ind; index < end_ind; index++) {
             // import the L from the array
@@ -142,7 +125,7 @@ int main(int argc, char *argv[]) {
             L[3] = data.getL4()[index];
 
             // INITIALIZE THE MODEL
-            PMTassociation m(mode, Nch, index, L);
+            PMTassociation m(mode, Nch, L);
 
             // Setting MCMC algorithm and precision
             m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
@@ -150,7 +133,7 @@ int main(int argc, char *argv[]) {
             if (write_log) {
                 BCLog::OutSummary("Model created");
             }
-            Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
+            // Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
             m.SetNIterationsPreRunMax(100000);
 
             // Setting MC run iterations and number of parallel chains
@@ -168,17 +151,18 @@ int main(int argc, char *argv[]) {
             // Write MCMC on root file (The full chains are not needed for the position reconstruction)
             if (write_chains) {
                 m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
-                m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
+                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
             }
 
             if (plot) {
                 // Draw all marginalized distributions into a PDF file
-                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + index + "_plots.pdf");
+                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
+            
                 // Print summary plots
-                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + index + "_parameters.pdf");
-                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + index + "_correlation.pdf");
-                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + index + "_correlationMatrix.pdf");
-                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
+                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
+                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
+                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
+                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
             }
             
             // Print results of the analysis
@@ -229,17 +213,7 @@ int main(int argc, char *argv[]) {
     else if (mode.compare("PMTcalibration") == 0) { 
         // Setting chains parameters
         int Nch = 12;          //number of parallel MCMC chains
-        int NIter = nPoints*10000;   //number of step per chain
-
-        // prepare output variables
-        std::vector<double> c1_mean;
-        std::vector<double> c1_std;
-        std::vector<double> c2_mean;
-        std::vector<double> c2_std;
-        std::vector<double> c3_mean;
-        std::vector<double> c3_std;
-        std::vector<double> c4_mean;
-        std::vector<double> c4_std;
+        int NIter = nPoints*40000;   //number of step per chain
 
         // BEGIN OF THE FIT LOOP
         for (int index = start_ind; index < end_ind; index += nPoints) {
@@ -253,7 +227,7 @@ int main(int argc, char *argv[]) {
             std::vector<double> y;
 
             // loop over the nPoints points to fit
-            for(int point = 0; point<nPoints;; point++){
+            for(int point = 0; point<nPoints; point++){
                 L1.push_back(data.getL1()[index+point]);
                 L2.push_back(data.getL2()[index+point]);
                 L3.push_back(data.getL3()[index+point]);
@@ -264,7 +238,7 @@ int main(int argc, char *argv[]) {
             }
 
             // INITIALIZE THE MODEL
-            PMTcalibration m(mode, Nch, nPoints, index, L1, L2, L3, L4, x, y);
+            PMTcalibration m(mode, Nch, nPoints, L1, L2, L3, L4, x, y);
 
             // Setting MCMC algorithm and precision
             m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
@@ -279,13 +253,17 @@ int main(int argc, char *argv[]) {
             // Setting initial position for the parameters ## NEED TO BE checked
             std::vector<double> x0;
             x0.push_back(1000.);    // L
-            for(int i=0; i<2*nPoints; i++) { // x and y
-                x0.push_back(16.5);
+            for(int i=0; i<nPoints; i++) { // x and y
+                x0.push_back(x[i]);
+                x0.push_back(y[i]);
             }
             for (int i =0; i<4; i++){// The 4 PMT "calibrations"
                 x0.push_back(1.0);
             }
-            m.SetInitialPositions(x0);
+
+            std::cout << "lunghezza di x0: " << x0.size() <<std::endl;
+            std::cout << "Number of parameters: " << m.GetNParameters() << std::endl;
+            // m.SetInitialPositions(x0);
 
             // Setting MC run iterations and number of parallel chains
             m.SetNIterationsRun(NIter);
@@ -300,19 +278,19 @@ int main(int argc, char *argv[]) {
 
             // Write MCMC on root file (The full chains are not needed for the position reconstruction)
             if (write_chains) {
-                m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
-                m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
+                m.WriteMarkovChain("prova_mcmc_cal.root", "RECREATE");//, true, true);
+                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
             }
 
             if (plot) {
                 // Draw all marginalized distributions into a PDF file
-                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + index + "_plots.pdf");
+                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
             
                 // Print summary plots
-                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + index + "_parameters.pdf");
-                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + index + "_correlation.pdf");
-                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + index + "_correlationMatrix.pdf");
-                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + index + "_update.pdf");
+                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
+                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
+                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
+                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
             }
             
             // Print results of the analysis

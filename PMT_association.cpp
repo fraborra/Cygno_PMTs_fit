@@ -14,16 +14,13 @@
 
 // PMTfit class
 PMTassociation::PMTassociation(const std::string& mode, int nth, 
-                               int index, double *L) : BCModel(mode)
+                               double *L) : BCModel(mode)
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
     Lmax = 40000; //The smaller the smaller the parameter space
     cmax = 2;
-    index_ = index;
-    xTrue = x;
-    yTrue = y;
 
     for (int i = 0; i < 4; ++i) {
         data[i] = L[i];
