@@ -28,28 +28,19 @@ class PMTassociation : public BCModel
 {
 public:
 
-    PMTassociation(const std::string& mode, int nth, double *L);
+    PMTassociation(const std::string& mode, int nth, double *L, double *c_tmp);
 
     ~PMTassociation(){};
 
     double LogLikelihood(const std::vector<double>& pars);
 
-    double LogAPrioriProbability(const std::vector<double>& pars);
-
     double D2(double x, double y, int i);
     
 private:
     double Lmax;
-    double cmax;
+    double c[4] = {1.};
     std::string mode_;
-
-    // prior parameters
-    double L_mean = 0;
-    double L_std = 0;
-    
-    double c_mean[4] = {0.};
-    double c_std[4] = {0.};
-    
+        
     //PMT positions (in cm)
     double x1 = 2.3;
     double y1 = 30.7;
