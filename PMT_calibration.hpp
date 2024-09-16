@@ -34,8 +34,6 @@ public:
 
     double LogLikelihood(const std::vector<double>& pars);
 
-    double LogAPrioriProbability(const std::vector<double>& pars);
-
     double D2(double x, double y, int i);
     
 private:

@@ -41,20 +41,19 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP,
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").Fix(4000.0); // just to have c_i values smaller, can put any value, 
                                        // we are only interested in the c_i ratios
-        
-        for(unsigned int i=0; i < nPoints; i++) {
-            AddParameter("x_"+std::to_string(i), 0, 33, "x_"+std::to_string(i), "[cm]");
-            AddParameter("y_"+std::to_string(i), 0, 33, "y_"+std::to_string(i), "[cm]");
-            //  FIXING x and y COORDINATES         
-            GetParameter("x_"+std::to_string(i)).Fix(xTrue[i]);
-            GetParameter("y_"+std::to_string(i)).Fix(yTrue[i]);
-        }
 
         // The prior for the c_i can be tweaked to reduce parameter space
         AddParameter("c1", 0., cmax, "c1", "[counts]");
+        GetParameter("c1").SetPriorConstant();
+        
         AddParameter("c2", 0., cmax, "c2", "[counts]");
+        GetParameter("c2").SetPriorConstant();
+        
         AddParameter("c3", 0., cmax, "c3", "[counts]");
+        GetParameter("c3").SetPriorConstant();
+        
         AddParameter("c4", 0., cmax, "c4", "[counts]");
+        GetParameter("c4").SetPriorConstant();
 
     } else {
         throw std::runtime_error("Unknown model '"+mode_+"'.\n");
@@ -72,18 +71,19 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
     
     // NEED TO RESTORE A LOOP FOR NPOINTS
     for(unsigned int i=0; i<nPoints; i++) { // i == nPoint index
-
+        
         for(unsigned int j=0; j<4; j++) { // j == PMT index
+
             double Lij = data[j][i];  // here the data
 
             double sLij = 0.1*Lij; // for now set to 10% of the integral
             
-            // int k = 1+ 2*nPoints +j;  // index for c_i (pars[3] is c_1 if nPoints=1 and so on)
-            int k = pars.size()-4 + j;
+            // int k = 1+j;  // index for c_i (pars[1] is c_1)
+            int k = 1 + j;
 
-            double tmp = D2(pars[1 + 2*i], pars[2 + 2*i], j);     // compute r_i**2
+            double rij = D2(xTrue[i], yTrue[i], j);               // compute r_ij**2
             LL += BCMath::LogGaus(Lij,                            // x, namely Lj
-                                 (pars[0]*pars[k])/(pow(tmp, 2)), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
+                                 (pars[0]*pars[k])/(pow(rij, 2)), // mu, namely the light computed in the step (c_i * Lij / r_ij^4)
                                  sLij,                            // sigma
                                  true                             // norm factor
                                  );
@@ -93,35 +93,6 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
     return LL;
 }
 
-// Define prior
-double PMTcalibration::LogAPrioriProbability(const std::vector<double>& pars) {
-    double LL = 0.;
-        //flat priors everywhere
-
-    // L prior
-    if(pars[0]<0 || pars[0]>Lmax) {
-        LL += log(0.0);
-    } else {
-        LL += log(1.0/Lmax);
-    }
-    // x_i and y_i prior
-    for(unsigned int i=1; i < 1 + nPoints*2; i++) {
-        if(pars[i]<0 || pars[i]>33.) {
-            LL += log(0.0);
-        } else {
-            LL += log(1.0/33.);
-        }
-    }
-    // c_i prior
-    for(unsigned int j=(pars.size()-4); j<pars.size(); j++){
-            if(pars[j]<0. || pars[j]>cmax) {
-                LL += log(0.0);
-            } else {
-                LL += log(1.0/cmax);
-            }
-        }
-    return LL;
-}
 
 // Function to calculate distance between the PMT and the chosen position
 double PMTcalibration::D2(double x, double y, int i) {

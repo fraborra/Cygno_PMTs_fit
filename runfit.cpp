@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <omp.h>
 
 #include "PMT_association.hpp"
 #include "PMT_calibration.hpp"
@@ -37,6 +38,13 @@ int main(int argc, char *argv[]) {
     bool write_log = config.write_log;
     bool print_summary = config.print_summary;
     int nPoints = config.nPoints;
+    double c1 = 1;
+    double c2 = config.c2/config.c1;
+    double c3 = config.c3/config.c1;
+    double c4 = config.c4/config.c1;
+
+    double c_list[4] = {c1, c2, c3, c4};
+
 
     std::string res_dir;
 
@@ -56,41 +64,19 @@ int main(int argc, char *argv[]) {
     }
     
 //  Create results folder if not existing and plot/log/chains requested
-    if (write_chains || write_log || plot) {
-        res_dir = "./output_"+mode;
+    res_dir = "./output_"+mode;
 
-        int com = std::system(("mkdir "+res_dir).c_str());
-        if(com != 0) {
-            std::cout<<com<<std::endl;
-        } else {
-            std::cerr << "Failed to create directory: " << res_dir << std::endl;
-        }
-        res_dir += "/";
-        std::cout << res_dir << std::endl;
+    int com = std::system(("mkdir "+res_dir).c_str());
+    if(com ==0) {
+        std::cerr << "Failed to create directory: " << res_dir << std::endl;
     }
+    res_dir += "/";
     
     // Reading input file
     DataReader data(input_file, mode);
 
     std::vector<int>::size_type index_max = data.getRun().size();
-    if (end_ind == -1)
-    {
-        if(mode.compare("association") == 0) {
-            end_ind = index_max;
-        }
-        else if(mode.compare("PMTcalibration") == 0) {
-            end_ind = index_max - index_max%nPoints;
-        }
-
-    } else if (index_max<end_ind)
-    {
-        if(mode.compare("association") == 0) {
-            end_ind = index_max;
-        }
-        else if(mode.compare("PMTcalibration") == 0) {
-            end_ind = index_max - index_max%nPoints;
-        }
-    }
+    if (end_ind == -1 || index_max<end_ind) {end_ind = index_max;}
 
     // prepare output variables
     std::vector<double> L_mean;
@@ -100,20 +86,11 @@ int main(int argc, char *argv[]) {
     std::vector<double> y_mean;
     std::vector<double> y_std;
 
-    std::vector<double> c1_mean;
-    std::vector<double> c1_std;
-    std::vector<double> c2_mean;
-    std::vector<double> c2_std;
-    std::vector<double> c3_mean;
-    std::vector<double> c3_std;
-    std::vector<double> c4_mean;
-    std::vector<double> c4_std;
-
 // ==================================== START =========================//
     if(mode.compare("association") == 0) { // START OF PMT ASSOCIATION if
         // Setting chains parameters
         int Nch = 6;           //number of parallel MCMC chains
-        int NIter = 1*10000;   //number of step per chain
+        int NIter = nPoints*10000;   //number of step per chain
 
         // BEGIN OF THE FIT LOOP
         for (int index = start_ind; index < end_ind; index++) {
@@ -124,8 +101,13 @@ int main(int argc, char *argv[]) {
             L[2] = data.getL3()[index];
             L[3] = data.getL4()[index];
 
+            // Create log
+            if (write_log) {
+                BCLog::OpenLog("log.txt", BCLog::detail, BCLog::detail);
+            }
+
             // INITIALIZE THE MODEL
-            PMTassociation m(mode, Nch, L);
+            PMTassociation m(mode, Nch, L, c_list);
 
             // Setting MCMC algorithm and precision
             m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
@@ -140,6 +122,14 @@ int main(int argc, char *argv[]) {
             m.SetNIterationsRun(NIter);
             m.SetNChains(Nch);
 
+            // Name for BAT outputs
+            std::string BAT_out_prefix = res_dir+m.GetSafeName() + "_" + input_file + "_" +std::to_string(index);
+
+            // Write MCMC on root file (The full chains are not needed for the position reconstruction)
+            if (write_chains) {
+                m.WriteMarkovChain(BAT_out_prefix + "_mcmc.root", "RECREATE");
+            }
+
 // ===============================================================
             // Run MCMC, marginalizing posterior
             m.MarginalizeAll();
@@ -148,21 +138,15 @@ int main(int argc, char *argv[]) {
             // Run mode finding; by default using Minuit
             m.FindMode(m.GetBestFitParameters());
 
-            // Write MCMC on root file (The full chains are not needed for the position reconstruction)
-            if (write_chains) {
-                m.WriteMarkovChain("prova_mcmc.root", "RECREATE");//, true, true);
-                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
-            }
-
             if (plot) {
                 // Draw all marginalized distributions into a PDF file
-                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
+                m.PrintAllMarginalized(BAT_out_prefix + "_plots.pdf");
             
                 // Print summary plots
-                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
-                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
-                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
-                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
+                m.PrintParameterPlot(BAT_out_prefix + "_parameters.pdf");
+                m.PrintCorrelationPlot(BAT_out_prefix + "_correlation.pdf");
+                m.PrintCorrelationMatrix(BAT_out_prefix + "_correlationMatrix.pdf");
+                m.PrintKnowledgeUpdatePlots(BAT_out_prefix + "_update.pdf");
             }
             
             // Print results of the analysis
@@ -209,140 +193,89 @@ int main(int argc, char *argv[]) {
         } // end for loop over row indices
     } // END PMT ASSOCIATION if
 
+
+
     // START PMT CALIBRATION IF
     else if (mode.compare("PMTcalibration") == 0) { 
+
         // Setting chains parameters
         int Nch = 12;          //number of parallel MCMC chains
-        int NIter = nPoints*40000;   //number of step per chain
+        int NIter = 100000;    //number of step per chain
 
-        // BEGIN OF THE FIT LOOP
-        for (int index = start_ind; index < end_ind; index += nPoints) {
+        // prepare helper variables
+        std::vector<double> L1;
+        std::vector<double> L2;
+        std::vector<double> L3;
+        std::vector<double> L4;
+        std::vector<double> x;
+        std::vector<double> y;
 
-            // prepare helper variables
-            std::vector<double> L1;
-            std::vector<double> L2;
-            std::vector<double> L3;
-            std::vector<double> L4;
-            std::vector<double> x;
-            std::vector<double> y;
+        // loop over the nPoints points to store data
+        for(int point = 0; point<end_ind; point++){
+            // HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
+            L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);
+            L2.push_back(data.getL2()[point]/data.getSc_integral()[point]*10000);
+            L3.push_back(data.getL3()[point]/data.getSc_integral()[point]*10000);
+            L4.push_back(data.getL4()[point]/data.getSc_integral()[point]*10000);
 
-            // loop over the nPoints points to fit
-            for(int point = 0; point<nPoints; point++){
-                L1.push_back(data.getL1()[index+point]);
-                L2.push_back(data.getL2()[index+point]);
-                L3.push_back(data.getL3()[index+point]);
-                L4.push_back(data.getL4()[index+point]);
-
-                x.push_back(data.getXtrue()[index+point]);
-                y.push_back(data.getYtrue()[index+point]);
-            }
-
-            // INITIALIZE THE MODEL
-            PMTcalibration m(mode, Nch, nPoints, L1, L2, L3, L4, x, y);
-
-            // Setting MCMC algorithm and precision
-            m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
-            m.SetPrecision(BCEngineMCMC::kMedium);
-            if (write_log) {
-                BCLog::OutSummary("Model created");
-            }
-
-            // Setting prerun iterations to 10^6
-            m.SetNIterationsPreRunMax(1000000);
+            x.push_back(data.getXtrue()[point]);
+            y.push_back(data.getYtrue()[point]);
+        }
             
-            // Setting initial position for the parameters ## NEED TO BE checked
-            std::vector<double> x0;
-            x0.push_back(1000.);    // L
-            for(int i=0; i<nPoints; i++) { // x and y
-                x0.push_back(x[i]);
-                x0.push_back(y[i]);
-            }
-            for (int i =0; i<4; i++){// The 4 PMT "calibrations"
-                x0.push_back(1.0);
-            }
+        // Create log
+        BCLog::OpenLog("calibration_log.txt", BCLog::detail, BCLog::detail);
 
-            std::cout << "lunghezza di x0: " << x0.size() <<std::endl;
-            std::cout << "Number of parameters: " << m.GetNParameters() << std::endl;
-            // m.SetInitialPositions(x0);
+        // INITIALIZE THE MODEL
+        PMTcalibration cal(mode, Nch, end_ind, L1, L2, L3, L4, x, y);
 
-            // Setting MC run iterations and number of parallel chains
-            m.SetNIterationsRun(NIter);
-            m.SetNChains(Nch);
+        // Setting MCMC algorithm and precision
+        cal.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
+        cal.SetPrecision(BCEngineMCMC::kMedium);
+
+        BCLog::OutSummary("Model created");
+
+        // Setting prerun iterations to 10^6
+        cal.SetNIterationsPreRunMax(1000000);
+        
+        // Setting MC run iterations and number of parallel chains
+        cal.SetNIterationsRun(NIter);
+        cal.SetNChains(Nch);
+        
+        // Prefix for BAT outputs
+        std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + input_file;
+
+        cal.WriteMarkovChain(BAT_out_prefix_cal + "_mcmc.root", "RECREATE");
+
 // ===============================================================
-            // Run MCMC, marginalizing posterior
-            m.MarginalizeAll();
+        // Run MCMC, marginalizing posterior
+        cal.MarginalizeAll();
 // ===============================================================
 
-            // Run mode finding; by default using Minuit
-            m.FindMode(m.GetBestFitParameters());
+        // Run mode finding; by default using Minuit
+        cal.FindMode(cal.GetBestFitParameters());
 
-            // Write MCMC on root file (The full chains are not needed for the position reconstruction)
-            if (write_chains) {
-                m.WriteMarkovChain("prova_mcmc_cal.root", "RECREATE");//, true, true);
-                // m.WriteMarkovChain(res_dir+m.GetSafeName()+std::to_string(index) + "_mcmc.root", "RECREATE");
-            }
+        if (plot) {
+            // Draw all marginalized distributions into a PDF file
+            cal.PrintAllMarginalized(BAT_out_prefix_cal + "_plots.pdf");
+        
+            // Print summary plots
+            cal.PrintParameterPlot(BAT_out_prefix_cal + "_parameters.pdf");
+            cal.PrintCorrelationPlot(BAT_out_prefix_cal + "_correlation.pdf");
+            cal.PrintCorrelationMatrix(BAT_out_prefix_cal + "_correlationMatrix.pdf");
+            cal.PrintKnowledgeUpdatePlots(BAT_out_prefix_cal + "_update.pdf");
+        }
+        
+        // Print results of the analysis
+        cal.PrintSummary();
 
-            if (plot) {
-                // Draw all marginalized distributions into a PDF file
-                m.PrintAllMarginalized(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_plots.pdf");
-            
-                // Print summary plots
-                m.PrintParameterPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_parameters.pdf");
-                m.PrintCorrelationPlot(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlation.pdf");
-                m.PrintCorrelationMatrix(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_correlationMatrix.pdf");
-                m.PrintKnowledgeUpdatePlots(res_dir+m.GetSafeName() + "_" + std::to_string(index) + "_update.pdf");
-            }
-            
-            // Print results of the analysis
-            if (print_summary) {m.PrintSummary();}
+        // Close log file
+        BCLog::OutSummary("Exiting");
+        BCLog::CloseLog();
+        
+        return 0;
 
-            // ========================================================================================================
-            // STORE RESULTS
-            std::vector<unsigned> H1Indices = m.GetH1DPrintOrder();
 
-            // Check if the pre run has converged:
-            int status = m.GetNIterationsConvergenceGlobal();
-
-            if (status>0){ // If prerun converged then store the results
-                BCH1D posteriorc1 = m.GetMarginalized(H1Indices[0]);
-                BCH1D posteriorc2 = m.GetMarginalized(H1Indices[1]);
-                BCH1D posteriorc3 = m.GetMarginalized(H1Indices[2]);
-                BCH1D posteriorc4 = m.GetMarginalized(H1Indices[3]);
-
-                c1_mean.push_back(posteriorc1.GetHistogram()->GetMean());
-                c1_std.push_back(posteriorc1.GetHistogram()->GetRMS());
-
-                c2_mean.push_back(posteriorc2.GetHistogram()->GetMean());
-                c2_std.push_back(posteriorc2.GetHistogram()->GetRMS());
-
-                c3_mean.push_back(posteriorc3.GetHistogram()->GetMean());
-                c3_std.push_back(posteriorc3.GetHistogram()->GetRMS());
-
-                c4_mean.push_back(posteriorc4.GetHistogram()->GetMean());
-                c4_std.push_back(posteriorc4.GetHistogram()->GetRMS());
-
-                std::cout << "calibration, status > 0" << std::endl;
-
-            } else { // If prerun not converged then store -1 to all the parameters
-                c1_mean.push_back(-1);
-                c1_std.push_back(-1);
-                
-                c2_mean.push_back(-1);
-                c2_std.push_back(-1);
-
-                c3_mean.push_back(-1);
-                c3_std.push_back(-1);
-                
-                c4_mean.push_back(-1);
-                c4_std.push_back(-1);
-                std::cout << "calibration, status < 0" << std::endl;
-            } // end store results
-
-            if (index % 25 == 0) {// print every 25 index the iteration number
-                std::cout << "Iteration number: " << index << std::endl;
-            }
-
-        }// end for loop over indices (calibration)
+        // }// end for loop over indices (calibration)
     } // END PMT CALIBRATION if
     else { throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");}
 
@@ -356,7 +289,6 @@ int main(int argc, char *argv[]) {
     std::vector<int> event = data.getEvent();
     std::vector<int> trigger = data.getTrigger();
     std::vector<int> indx = data.getIndx();
-
 
     if(mode.compare("association") == 0) {
         std::vector<int>::size_type control = L_mean.size();
@@ -373,25 +305,9 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
-        }
-
-    } else if (mode.compare("PMTcalibration") == 0) {
-        std::vector<int>::size_type control = c1_mean.size();
-        int i = 0;
-        for (int index = start_ind; index < end_ind; index += nPoints) // NEED TO CHOOSE THE OUTPUT
-        {        
-            outfile << run[index] <<"\t"<< event[index] <<"\t"<< trigger[index] <<"\t"<< indx[index] <<"\t"
-            << c1_mean[i] <<"\t"<< c1_std[i] <<"\t"  // c1 and std
-            << c2_mean[i] <<"\t"<< c2_std[i] <<"\t"  // c2 and std
-            << c3_mean[i] <<"\t"<< c3_std[i] <<"\t"  // c3 and std
-            << c4_mean[i] <<"\t"<< c4_std[i]         // c4 and std
-            << std::endl;
-            i++;
-            if (i >= control) {
-                break;
-            }
-        }            
+        }     
     }
+
     outfile.close();
 
     if (write_log) {
