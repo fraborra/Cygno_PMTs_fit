@@ -1,3 +1,19 @@
+###################################################################
+# This Makefile was created using the bat-project script
+# for project Cygno_PMTs_fit
+# bat-project is part of Bayesian Analysis Toolkit (BAT).
+# BAT can be downloaded from http://mpp.mpg.de/bat
+###################################################################
+#
+# Run 'make' to compile the program and 'make clean' to remove
+# all compiled parts and 'clean' the directory.
+#
+# You might need to adjust the CXXFLAGS and LIBS based on
+# the BAT installation on your system. Consult the gmake manual
+# for details.
+#
+###################################################################
+
 # List of all class (model) sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
@@ -47,7 +63,7 @@ link.d : $(addsuffix .hpp,$(basename $(CXXSRCS))) $(CXXSRCS) $(PRGSRCS)
 -include link.d
 
 
-cose.o :
+$(CXXOBJS) $(PRGOBJS) :
 	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
 
 
