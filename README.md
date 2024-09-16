@@ -43,6 +43,10 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     - `write_chains`: option to save MCMC chains of the parameters (use only for 1 integration at time).
     - `print_summary`: option to print the summary of the MCMC integration on the screen (false to reduce compute time).
     - `nPoints`: option to select how many events to integrate at once (usually 1 for the **association** and 4 for the **PMTcalibration**).
+    - `c1`: option to set calibratrion parameter for **PMT 1**
+    - `c2`: option to set calibratrion parameter for **PMT 2**
+    - `c3`: option to set calibratrion parameter for **PMT 3**
+    - `c4`: option to set calibratrion parameter for **PMT 4**
 
 
 ## Input File Format
@@ -53,10 +57,10 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     - **event**: The event number.
     - **trigger**: The trigger number.
     - **peak index**: The index indicating the position of the peak in the waveform.
-    - **L1**: The integral of the **PMT 1**.
-    - **L2**: The integral of the **PMT 2**.
-    - **L3**: The integral of the **PMT 3**.
-    - **L4**: The integral of the **PMT 4**.
+    - **L1**: The integral of the **PMT 1** must be in **nC**.
+    - **L2**: The integral of the **PMT 2** must be in **nC**.
+    - **L3**: The integral of the **PMT 3** must be in **nC**.
+    - **L4**: The integral of the **PMT 4** must be in **nC**.
 
     Each line in the input file should have these fields separated by a tab.
 
@@ -65,9 +69,10 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     An example can be found in `golden_input.txt`
 
 1. **PMTcalibration:**
-    The same as the association but with two more variables:
-    - **x**: x position of the cluster in the GEM plane, in cm
-    - **y**: y position of the cluster in the GEM plane, in cm
+    The same as the association but with three more variables:
+    - **x**: x position of the cluster in the GEM plane, in **cm**.
+    - **y**: y position of the cluster in the GEM plane, in **cm**.
+    - **sc_integral**: camera integral of the cluster.
 
 ## Output File Format
 
@@ -93,18 +98,7 @@ An example can be found in `golden_out.txt`
 
 2. **PMTcalibration:**
    
-- **run**: The run number.
-- **event**: The event number. (not useful, it is the one of the first event)
-- **trigger**: The trigger number. (not useful, it is the one of the first event)
-- **peak index**: The index indicating the position of the peak in the waveform. (not useful, it is the one of the first event)
-- **c1**: The value of parameter c1.
-- **c1std**: The standard deviation of parameter c1.
-- **c2**: The value of parameter c2.
-- **c2std**: The standard deviation of parameter c2.
-- **c3**: The value of parameter c3.
-- **c3std**: The standard deviation of parameter c3.
-- **c4**: The value of parameter c4.
-- **c4std**: The standard deviation of parameter c4.
+The PMTcalibration output will give only the chains of the computed "calibration parameters". How to read the chains can be found in the example [read_chains.ipynb](./read_chains.ipynb)
 
 =======
 
