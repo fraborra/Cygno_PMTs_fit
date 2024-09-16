@@ -22,6 +22,10 @@ struct Config {
     bool write_chains = false;
     bool write_log = false;
     bool print_summary = false;
+    double c1 = 1;
+    double c2 = 1;
+    double c3 = 1;
+    double c4 = 1;
 };
 
 // function to read config file
@@ -47,6 +51,8 @@ public:
     const std::vector<double>& getL3();
     const std::vector<double>& getL4();
 
+    const std::vector<double>& getSc_integral();
+
 private:
     std::vector<int> run;
     std::vector<int> event;
@@ -60,6 +66,8 @@ private:
 
     std::vector<double> xtrue;
     std::vector<double> ytrue;
+
+    std::vector<double> sc_integral;
 
     void readFile(const std::string& filename, const std::string& mode);
 };

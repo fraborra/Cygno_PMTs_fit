@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     // Reading input file
     DataReader data(input_file, mode);
 
-    std::vector<int>::size_type index_max = data.getRun().size();
+    int index_max = static_cast<int>(data.getRun().size());
     if (end_ind == -1 || index_max<end_ind) {end_ind = index_max;}
 
     // prepare output variables
@@ -291,7 +291,7 @@ int main(int argc, char *argv[]) {
     std::vector<int> indx = data.getIndx();
 
     if(mode.compare("association") == 0) {
-        std::vector<int>::size_type control = L_mean.size();
+        int control = static_cast<int>(L_mean.size());
         int i = 0;
         for (int index = start_ind; index < end_ind; index++)
         {        

@@ -36,6 +36,10 @@ Config readConfigFile(const std::string& filename) {
             else if (key == "write_chains") config.write_chains = stringToBool(value);
             else if (key == "write_log") config.write_log = stringToBool(value);
             else if (key == "print_summary") config.print_summary = stringToBool(value);
+            else if (key == "c1") config.c1 = std::stod(value);
+            else if (key == "c2") config.c2 = std::stod(value);
+            else if (key == "c3") config.c3 = std::stod(value);
+            else if (key == "c4") config.c4 = std::stod(value);
         }
     }
 
@@ -77,6 +81,9 @@ const std::vector<double>& DataReader::getL3(){
 const std::vector<double>& DataReader::getL4(){
     return L4;
 }
+const std::vector<double>& DataReader::getSc_integral(){
+    return sc_integral;
+}
 
 //File reader
 void DataReader::readFile(const std::string& input_file, const std::string& mode){
@@ -86,11 +93,11 @@ void DataReader::readFile(const std::string& input_file, const std::string& mode
     }
 
     std::string runstr, evstr, trgstr, indxstr, L1str, L2str, L3str, L4str;
-    std::string xtruestr, ytruestr;                   
+    std::string xtruestr, ytruestr, sc_integralstr;                   
 
     if(file.is_open()) {
         if(mode.compare("association") == 0) {
-            while(file >>                              //Analisi mia
+            while(file >>
                   runstr >> evstr >> trgstr >> indxstr >>
                   L1str >> L2str >> L3str >> L4str)
             {                
@@ -107,7 +114,8 @@ void DataReader::readFile(const std::string& input_file, const std::string& mode
         } else if (mode.compare("PMTcalibration") == 0){
             while(file >>
                   runstr >> evstr >> trgstr >> indxstr >>
-                  L1str >> L2str >> L3str >> L4str >> xtruestr >> ytruestr
+                  L1str >> L2str >> L3str >> L4str >> 
+                  xtruestr >> ytruestr >> sc_integralstr
                   ) {                
                 run.push_back(stoi(runstr));
                 event.push_back(stoi(evstr));
@@ -120,6 +128,7 @@ void DataReader::readFile(const std::string& input_file, const std::string& mode
                 L4.push_back(stod(L4str));
                 xtrue.push_back(stod(xtruestr));
                 ytrue.push_back(stod(ytruestr));
+                sc_integral.push_back(stod(sc_integralstr));
             }
         } else {
             throw std::runtime_error("No matched mode for file readout\n");
