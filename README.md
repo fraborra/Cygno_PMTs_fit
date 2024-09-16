@@ -35,14 +35,14 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     The options are:
     - `mode`: to specify the mode of the program (between **association** and **PMTcalibration**).
     - `input_file`: name of the input file to use for the program.
-    - `output_file`: indicates the output file where the results will be saved.
-    - `start_ind`: defines the starting row of the input file (0 first row).
-    - `end_ind`: defines the ending row of the input file (-1 until the end).
+    - `output_file`: indicates the output file where the results will be saved for **association**.
+    - `start_ind`: defines the starting row of the input file (`0` first row).
+    - `end_ind`: defines the ending row of the input file (`-1` until the end).
     - `plot`: option to save some plots for the MCMC of the parameters (use only for 1 integration at time).
     - `write_log`: option to save the log files (use only for 1 integration at time).
-    - `write_chains`: option to save MCMC chains of the parameters (use only for 1 integration at time).
-    - `print_summary`: option to print the summary of the MCMC integration on the screen (false to reduce compute time).
-    - `nPoints`: option to select how many events to integrate at once (usually 1 for the **association** and 4 for the **PMTcalibration**).
+    - `write_chains`: option to save MCMC chains of the parameters (use only for 1 integration at time in **association**, always `true` in **PMTcalibration**).
+    - `print_summary`: option to print the summary of the MCMC integration on the screen (`false` to reduce compute time, always `true` in **PMTcalibration**).
+    - `nPoints`: option to select how many events to integrate at once for the **association** (usually `1`).
     - `c1`: option to set calibratrion parameter for **PMT 1**
     - `c2`: option to set calibratrion parameter for **PMT 2**
     - `c3`: option to set calibratrion parameter for **PMT 3**
@@ -108,4 +108,4 @@ The PMTcalibration output will give only the chains of the computed "calibration
 - **Email:** francesco.borra@uniroma3.it
 ## Credits
 
-Special thanks Stefano Piacentini.
+Special thanks Stefano Piacentini and Matteo Folcarelli.
