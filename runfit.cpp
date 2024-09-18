@@ -15,6 +15,7 @@
 
 #include "PMT_association.hpp"
 #include "PMT_calibration.hpp"
+#include "PMT_FindAlpha.hpp"
 #include "helper_lib.hpp"
 
 int main(int argc, char *argv[]) {
@@ -48,11 +49,11 @@ int main(int argc, char *argv[]) {
 
     std::string res_dir;
 
-    const std::string known_mode[2] = {"association", "PMTcalibration"};
+    const std::string known_mode[3] = {"association", "PMTcalibration","PMTfindalpha"};
                                         // MAYBE ADD ONE THAT ONLY GIVES THE CHAINS AND POSTERIORS
     
     bool compare_r_type = false;
-    for(int i=0; i<2;i++){
+    for(int i=0; i<3;i++){
         if(mode.compare(known_mode[i]) == 0) {
             compare_r_type = true;
         }
@@ -67,10 +68,13 @@ int main(int argc, char *argv[]) {
     res_dir = "./output_"+mode;
 
     int com = std::system(("mkdir "+res_dir).c_str());
-    if(com ==0) {
-        std::cerr << "Failed to create directory: " << res_dir << std::endl;
+    
+    /*
+    if(com == 0) {
+    std::cerr << "Failed to create directory: " << res_dir << std::endl;
     }
     res_dir += "/";
+    */
     
     // Reading input file
     DataReader data(input_file, mode);
@@ -86,7 +90,7 @@ int main(int argc, char *argv[]) {
     std::vector<double> y_mean;
     std::vector<double> y_std;
 
-// ==================================== START =========================//
+    // ==================================== START =========================//
     if(mode.compare("association") == 0) { // START OF PMT ASSOCIATION if
         // Setting chains parameters
         int Nch = 6;           //number of parallel MCMC chains
@@ -277,8 +281,91 @@ int main(int argc, char *argv[]) {
 
         // }// end for loop over indices (calibration)
     } // END PMT CALIBRATION if
-    else { throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");}
+    else if (mode.compare("PMTfindalpha") == 0) {
 
+      // Setting chains parameters
+      int Nch = 12;          //number of parallel MCMC chains
+      int NIter = 100000;    //number of step per chain
+
+      // prepare helper variables
+      std::vector<double> L1;
+      std::vector<double> L2;
+      std::vector<double> L3;
+      std::vector<double> L4;
+      std::vector<double> x;
+      std::vector<double> y;
+      
+      // loop over the nPoints points to store data
+      for(int point = 0; point<end_ind; point++){
+	// HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
+	
+	L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);
+	L2.push_back(data.getL2()[point]/data.getSc_integral()[point]*10000);
+	L3.push_back(data.getL3()[point]/data.getSc_integral()[point]*10000);
+	L4.push_back(data.getL4()[point]/data.getSc_integral()[point]*10000);
+	
+	x.push_back(data.getXtrue()[point]);
+	y.push_back(data.getYtrue()[point]);
+      }
+
+      // Create log
+      BCLog::OpenLog("findalpha_log.txt", BCLog::detail, BCLog::detail);
+
+      // INITIALIZE THE MODEL
+      PMTfindalpha cal(mode, Nch, end_ind, L1, L2, L3, L4, x, y);
+
+      // Setting MCMC algorithm and precision
+      cal.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
+      cal.SetPrecision(BCEngineMCMC::kMedium);
+
+      BCLog::OutSummary("Model created");
+
+      // Setting prerun iterations to 10^6
+      cal.SetNIterationsPreRunMax(1000000);
+      
+      // Setting MC run iterations and number of parallel chains
+      cal.SetNIterationsRun(NIter);
+      cal.SetNChains(Nch);
+      
+      // Prefix for BAT outputs
+      std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + input_file;
+
+      cal.WriteMarkovChain(BAT_out_prefix_cal + "_mcmc.root", "RECREATE");
+
+      // ===============================================================
+      // Run MCMC, marginalizing posterior
+      cal.MarginalizeAll();
+      // ===============================================================
+
+      // Run mode finding; by default using Minuit
+      cal.FindMode(cal.GetBestFitParameters());
+      
+      if (plot) {
+	// Draw all marginalized distributions into a PDF file
+	cal.PrintAllMarginalized(BAT_out_prefix_cal + "_plots.pdf");
+        
+	// Print summary plots
+	cal.PrintParameterPlot(BAT_out_prefix_cal + "_parameters.pdf");
+	cal.PrintCorrelationPlot(BAT_out_prefix_cal + "_correlation.pdf");
+	cal.PrintCorrelationMatrix(BAT_out_prefix_cal + "_correlationMatrix.pdf");
+	cal.PrintKnowledgeUpdatePlots(BAT_out_prefix_cal + "_update.pdf");
+      }
+      
+      // Print results of the analysis
+      cal.PrintSummary();
+      
+      // Close log file
+      BCLog::OutSummary("Exiting");
+      BCLog::CloseLog();
+      
+      return 0;
+      
+      
+      // }// end for loop over indices (calibration)
+    }
+    
+    else { throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");}
+    
 
 
     // PRINT RESULTS ON FILE
