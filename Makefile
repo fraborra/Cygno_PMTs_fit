@@ -17,7 +17,7 @@
 # List of all class (model) sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
-CXXSRCS = PMT_association.cpp helper_lib.cpp PMT_calibration.cpp
+CXXSRCS = PMT_association.cpp helper_lib.cpp PMT_calibration.cpp PMT_FindAlpha.cpp
 
 # List of all program sources used in the program,
 # separated by spaces. A backslash indicates continuation

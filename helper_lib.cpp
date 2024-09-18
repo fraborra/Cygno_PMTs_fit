@@ -130,7 +130,27 @@ void DataReader::readFile(const std::string& input_file, const std::string& mode
                 ytrue.push_back(stod(ytruestr));
                 sc_integral.push_back(stod(sc_integralstr));
             }
-        } else {
+        } else if (mode.compare("PMTfindalpha") == 0){
+            while(file >>
+                  runstr >> evstr >> trgstr >> indxstr >>
+                  L1str >> L2str >> L3str >> L4str >> 
+                  xtruestr >> ytruestr >> sc_integralstr
+                  ) {                
+                run.push_back(stoi(runstr));
+                event.push_back(stoi(evstr));
+                trigger.push_back(stoi(trgstr));
+                indx.push_back(stoi(indxstr));
+                
+                L1.push_back(stod(L1str));
+                L2.push_back(stod(L2str));
+                L3.push_back(stod(L3str));
+                L4.push_back(stod(L4str));
+                xtrue.push_back(stod(xtruestr));
+                ytrue.push_back(stod(ytruestr));
+                sc_integral.push_back(stod(sc_integralstr));
+            }
+        }
+	else {
             throw std::runtime_error("No matched mode for file readout\n");
         }
     } else {
