@@ -69,13 +69,11 @@ int main(int argc, char *argv[]) {
 
     int com = std::system(("mkdir "+res_dir).c_str());
     
-    /*
     if(com == 0) {
     std::cerr << "Failed to create directory: " << res_dir << std::endl;
     }
     res_dir += "/";
-    */
-    
+        
     // Reading input file
     DataReader data(input_file, mode);
 
@@ -202,6 +200,10 @@ int main(int argc, char *argv[]) {
     // START PMT CALIBRATION IF
     else if (mode.compare("PMTcalibration") == 0) { 
 
+        write_log = true;
+        write_chains = true;
+        print_summary = true;
+
         // Setting chains parameters
         int Nch = 12;          //number of parallel MCMC chains
         int NIter = 100000;    //number of step per chain
@@ -278,10 +280,15 @@ int main(int argc, char *argv[]) {
         
         return 0;
 
-
-        // }// end for loop over indices (calibration)
     } // END PMT CALIBRATION if
+
+
+    // START FIND ALPHA IF
     else if (mode.compare("PMTfindalpha") == 0) {
+
+      write_log = true;
+      write_chains = true;
+      print_summary = true;
 
       // Setting chains parameters
       int Nch = 12;          //number of parallel MCMC chains
@@ -297,15 +304,14 @@ int main(int argc, char *argv[]) {
       
       // loop over the nPoints points to store data
       for(int point = 0; point<end_ind; point++){
-	// HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
-	
-	L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);
-	L2.push_back(data.getL2()[point]/data.getSc_integral()[point]*10000);
-	L3.push_back(data.getL3()[point]/data.getSc_integral()[point]*10000);
-	L4.push_back(data.getL4()[point]/data.getSc_integral()[point]*10000);
-	
-	x.push_back(data.getXtrue()[point]);
-	y.push_back(data.getYtrue()[point]);
+	    // HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
+        L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);
+        L2.push_back(data.getL2()[point]/data.getSc_integral()[point]*10000);
+        L3.push_back(data.getL3()[point]/data.getSc_integral()[point]*10000);
+        L4.push_back(data.getL4()[point]/data.getSc_integral()[point]*10000);
+        
+        x.push_back(data.getXtrue()[point]);
+        y.push_back(data.getYtrue()[point]);
       }
 
       // Create log
@@ -341,14 +347,14 @@ int main(int argc, char *argv[]) {
       cal.FindMode(cal.GetBestFitParameters());
       
       if (plot) {
-	// Draw all marginalized distributions into a PDF file
-	cal.PrintAllMarginalized(BAT_out_prefix_cal + "_plots.pdf");
-        
-	// Print summary plots
-	cal.PrintParameterPlot(BAT_out_prefix_cal + "_parameters.pdf");
-	cal.PrintCorrelationPlot(BAT_out_prefix_cal + "_correlation.pdf");
-	cal.PrintCorrelationMatrix(BAT_out_prefix_cal + "_correlationMatrix.pdf");
-	cal.PrintKnowledgeUpdatePlots(BAT_out_prefix_cal + "_update.pdf");
+        // Draw all marginalized distributions into a PDF file
+        cal.PrintAllMarginalized(BAT_out_prefix_cal + "_plots.pdf");
+            
+        // Print summary plots
+        cal.PrintParameterPlot(BAT_out_prefix_cal + "_parameters.pdf");
+        cal.PrintCorrelationPlot(BAT_out_prefix_cal + "_correlation.pdf");
+        cal.PrintCorrelationMatrix(BAT_out_prefix_cal + "_correlationMatrix.pdf");
+        cal.PrintKnowledgeUpdatePlots(BAT_out_prefix_cal + "_update.pdf");
       }
       
       // Print results of the analysis
@@ -360,24 +366,24 @@ int main(int argc, char *argv[]) {
       
       return 0;
       
-      
-      // }// end for loop over indices (calibration)
     }
     
     else { throw std::invalid_argument("Unknown reconstruction type '"+mode+"'");}
     
 
 
-    // PRINT RESULTS ON FILE
-    std::ofstream outfile;
-    outfile.open(output_file, std::ios_base::trunc);
 
-    std::vector<int> run = data.getRun();
-    std::vector<int> event = data.getEvent();
-    std::vector<int> trigger = data.getTrigger();
-    std::vector<int> indx = data.getIndx();
+    // PRINT RESULTS ON FILE
 
     if(mode.compare("association") == 0) {
+        std::ofstream outfile;
+        outfile.open(output_file, std::ios_base::trunc);
+
+        std::vector<int> run = data.getRun();
+        std::vector<int> event = data.getEvent();
+        std::vector<int> trigger = data.getTrigger();
+        std::vector<int> indx = data.getIndx();
+
         int control = static_cast<int>(L_mean.size());
         int i = 0;
         for (int index = start_ind; index < end_ind; index++)
@@ -393,9 +399,9 @@ int main(int argc, char *argv[]) {
             }
 
         }     
-    }
+        outfile.close();
 
-    outfile.close();
+    }
 
     if (write_log) {
         // Close log file
