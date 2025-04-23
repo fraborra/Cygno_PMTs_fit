@@ -19,7 +19,10 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 2. **Install dependencies:**
     Make sure BAT is installed and properly configured.
 
-3. **Compile the project:**
+3. **Modify the Makefile**
+    Make sure to link BAT and other C++ libraries in the Makefile
+
+4. **Compile the project:**
     ```bash
     make
     ```
