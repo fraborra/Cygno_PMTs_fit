@@ -19,6 +19,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
+#include "TH2F.h"
+
 
 #include "Math/ProbFunc.h"
 // #include "helper.hpp"

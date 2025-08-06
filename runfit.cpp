@@ -87,6 +87,9 @@ int main(int argc, char *argv[]) {
     std::vector<double> x_std;
     std::vector<double> y_mean;
     std::vector<double> y_std;
+    std::vector<double> corrLx;
+    std::vector<double> corrLy;
+    std::vector<double> corrxy;
 
     // ==================================== START =========================//
     if(mode.compare("association") == 0) { // START OF PMT ASSOCIATION if
@@ -125,7 +128,7 @@ int main(int argc, char *argv[]) {
             m.SetNChains(Nch);
 
             // Name for BAT outputs
-            std::string BAT_out_prefix = res_dir+m.GetSafeName() + "_" + input_file + "_" +std::to_string(index);
+            std::string BAT_out_prefix = res_dir+m.GetSafeName() + "_" +std::to_string(index);
 
             // Write MCMC on root file (The full chains are not needed for the position reconstruction)
             if (write_chains) {
@@ -166,7 +169,7 @@ int main(int argc, char *argv[]) {
                 BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
                 BCH1D posteriorx = m.GetMarginalized(H1Indices[1]);
                 BCH1D posteriory = m.GetMarginalized(H1Indices[2]);
-
+                
                 L_mean.push_back(posteriorL.GetHistogram()->GetMean());
                 L_std.push_back(posteriorL.GetHistogram()->GetRMS());
                 
@@ -175,6 +178,14 @@ int main(int argc, char *argv[]) {
                 
                 y_mean.push_back(posteriory.GetHistogram()->GetMean());
                 y_std.push_back(posteriory.GetHistogram()->GetRMS());
+                
+                BCH2D postLx = m.GetMarginalized(H1Indices[0], H1Indices[1]);
+                BCH2D postLy = m.GetMarginalized(H1Indices[0], H1Indices[2]);
+                BCH2D postxy = m.GetMarginalized(H1Indices[1], H1Indices[2]);
+                
+                corrLx.push_back(postLx.GetHistogram()->GetCorrelationFactor());
+                corrLy.push_back(postLy.GetHistogram()->GetCorrelationFactor());
+                corrxy.push_back(postxy.GetHistogram()->GetCorrelationFactor());
 
             } else { // If prerun not converged then store -1 to all the parameters
                 L_mean.push_back(-1);
@@ -185,6 +196,10 @@ int main(int argc, char *argv[]) {
                 
                 y_mean.push_back(-1);
                 y_std.push_back(-1);
+                
+                corrLx.push_back(-1);
+                corrLx.push_back(-1);
+                corrLx.push_back(-1);
 
                 std::cout << "association, status < 0" << std::endl;
             }
@@ -391,7 +406,10 @@ int main(int argc, char *argv[]) {
             outfile << run[index] <<"\t"<< event[index] <<"\t"<< trigger[index] <<"\t"<< indx[index] <<"\t"
             << L_mean[i] <<"\t"<< L_std[i] <<"\t"  // L and L_std
             << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
-            << y_mean[i] <<"\t"<< y_std[i]         // y and y_std
+            << y_mean[i] <<"\t"<< y_std[i] <<"\t"      // y and y_std
+                
+            << corrLx[i] <<"\t"<< corrLy[i]<<"\t"<< corrxy[i]        // Correlations
+                
             << std::endl;
             i++;
             if (i >= control) {
