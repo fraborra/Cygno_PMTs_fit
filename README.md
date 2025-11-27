@@ -112,3 +112,8 @@ The PMTcalibration output will give only the chains of the computed "calibration
 ## Credits
 
 Special thanks Stefano Piacentini and Matteo Folcarelli.
+
+## License
+
+This project is licensed under the GNU General Public License v3 (GPLv3).  
+See the LICENSE file for details: <https://www.gnu.org/licenses/>.

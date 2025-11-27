@@ -4,6 +4,7 @@
 *.txt
 *.pdf
 *.png
+
 #others
 *.ipynb
 
@@ -12,6 +13,9 @@
 *.obj
 *.lo
 *.slo
+
+# Build
+build/
 
 # Precompiled Headers
 *.gch
