@@ -14,15 +14,25 @@
 #
 ###################################################################
 
+# Directories
+SRC_DIR = src
+BUILD_DIR = build
+BIN_DIR = bin
+
 # List of all class (model) sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
-CXXSRCS = PMT_association.cpp helper_lib.cpp PMT_calibration.cpp PMT_FindAlpha.cpp
+CXXSRCS = $(SRC_DIR)/PMT_association.cpp \
+          $(SRC_DIR)/helper_lib.cpp \
+          $(SRC_DIR)/PMT_calibration.cpp \
+          $(SRC_DIR)/PMT_FindAlpha.cpp
 
 # List of all program sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
-PRGSRCS = runfit.cpp
+PRGSRCS = $(SRC_DIR)/runfit.cpp
+
+TARGET = $(BIN_DIR)/fitter
 
 # compiler and flags
 CXX       = g++
@@ -45,28 +55,28 @@ LIBS := $(shell bat-config --libs)
 # don't change lines below unless you know what you're doing
 #
 
-CXXOBJS = $(addsuffix .o,$(basename $(CXXSRCS)))
-MYPROGS = $(basename $(PRGSRCS))
-PRGOBJS = $(addsuffix .o,$(basename $(PRGSRCS)))
+CXXOBJS  = $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(basename $(notdir $(CXXSRCS)))))
+PRGOBJS  = $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(basename $(notdir $(PRGSRCS)))))
+MYPROGS  = $(BIN_DIR)/$(basename $(notdir $(PRGSRCS)))
 
-GARBAGE = $(CXXOBJS) $(PRGOBJS) link.d $(MYPROGS)
+GARBAGE  = $(CXXOBJS) $(PRGOBJS) link.d $(MYPROGS)
 
 # targets
 all : $(MYPROGS)
 
 .PHONY : all clean print
 
-link.d : $(addsuffix .hpp,$(basename $(CXXSRCS))) $(CXXSRCS) $(PRGSRCS)
-	$(CXX) -MM $(CXXFLAGS) $(filter-out %.h,$^) > link.d;
-	@$(foreach prog,$(MYPROGS), echo $(prog) : $(prog).o >> link.d;)
-
+link.d: $(CXXSRCS) $(PRGSRCS)
+	$(CXX) -MM $(CXXFLAGS) $(CXXSRCS) $(PRGSRCS) > link.d
+	@$(foreach prog,$(MYPROGS), echo $(prog) : $(BUILD_DIR)/$(notdir $(prog)).o >> link.d;)
 -include link.d
 
 
-$(CXXOBJS) $(PRGOBJS) :
-	$(CXX) $(CXXFLAGS) -c $(addsuffix .cpp,$(basename $@)) -o $@
+# compilation rules
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-
+# linking rules
 $(MYPROGS) : $(CXXOBJS) $(PRGOBJS)
 	$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
@@ -74,9 +84,9 @@ clean :
 	rm -f $(GARBAGE)
 
 print :
-	@echo compiler  : $(CXX)
-	@echo c++ srcs  : $(CXXSRCS) $(PRGSRCS)
-	@echo c++ objs  : $(CXXOBJS) $(PRGOBJS)
-	@echo c++ flags : $(CXXFLAGS)
-	@echo ld flags  : $(LDFLAGS)
-	@echo libs      : $(LIBS)
+	@echo "compiler  : $(CXX)"
+	@echo "c++ srcs  : $(CXXSRCS) $(PRGSRCS)"
+	@echo "c++ objs  : $(CXXOBJS) $(PRGOBJS)"
+	@echo "c++ flags : $(CXXFLAGS)"
+	@echo "ld flags  : $(LDFLAGS)"
+	@echo "libs      : $(LIBS)"
