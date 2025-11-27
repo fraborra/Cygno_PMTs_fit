@@ -38,6 +38,8 @@ public:
 
     double D2(double x, double y, int i);
     
+    double EvaluateSigma(double mu);
+    
 private:
     double Lmax;
     double c[4] = {1.};

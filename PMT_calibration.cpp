@@ -76,22 +76,36 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
 
             double Lij = data[j][i];  // here the data
 
-            double sLij = 0.1*Lij; // for now set to 10% of the integral
             
             // int k = 1+j;  // index for c_i (pars[1] is c_1)
             int k = 1 + j;
-
+            
             double rij = D2(xTrue[i], yTrue[i], j);               // compute r_ij**2
-            LL += BCMath::LogGaus(Lij,                            // x, namely Lj
-                                 (pars[0]*pars[k])/(pow(rij, 2)), // mu, namely the light computed in the step (c_i * Lij / r_ij^4)
-                                 sLij,                            // sigma
-                                 true                             // norm factor
+            double mu = (pars[0]*pars[k])/(pow(rij, 2));
+
+            //             double sLij = 0.1*Lij; // for now set to 10% of the integral
+            double sLij = EvaluateSigma(mu); //
+
+            LL += BCMath::LogGaus(Lij,      // x, namely Lj
+                                 mu,        // mu, namely the light computed in the step (c_i * Lij / r_ij^4)
+                                 sLij,      // sigma
+                                 true       // norm factor
                                  );
         }
     }
 
     return LL;
 }
+
+// Evaluate sigma
+double PMTcalibration::EvaluateSigma(double mu) {
+    //func: sigma = [0]*sqrt(x)+x*[1]
+    double par0 = 0.02;
+    double par1 = 0.06;
+
+    return par0*sqrt(mu)+par1*mu;
+}
+
 
 
 // Function to calculate distance between the PMT and the chosen position

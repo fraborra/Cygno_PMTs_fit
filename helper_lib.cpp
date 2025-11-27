@@ -40,6 +40,7 @@ Config readConfigFile(const std::string& filename) {
             else if (key == "c2") config.c2 = std::stod(value);
             else if (key == "c3") config.c3 = std::stod(value);
             else if (key == "c4") config.c4 = std::stod(value);
+            else if (key == "cal_out_file") config.calibration_output_file = value;
         }
     }
 

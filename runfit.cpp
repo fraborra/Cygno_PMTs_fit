@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
     double c2 = config.c2/config.c1;
     double c3 = config.c3/config.c1;
     double c4 = config.c4/config.c1;
+    
+    std::string calibration_output_file = config.calibration_output_file;
 
     double c_list[4] = {c1, c2, c3, c4};
 
@@ -263,7 +265,16 @@ int main(int argc, char *argv[]) {
         cal.SetNChains(Nch);
         
         // Prefix for BAT outputs
-        std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + input_file;
+//         std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + input_file;
+          std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + calibration_output_file;
+
+        
+        std::cout << std::endl << "###############################" << std::endl;
+        std::cout << "###############################" << std::endl;
+        
+        std::cout << BAT_out_prefix_cal << std::endl;
+        std::cout << "###############################" << std::endl;
+        std::cout << "###############################" << std::endl << std::endl;
 
         cal.WriteMarkovChain(BAT_out_prefix_cal + "_mcmc.root", "RECREATE");
 
@@ -349,7 +360,7 @@ int main(int argc, char *argv[]) {
       cal.SetNChains(Nch);
       
       // Prefix for BAT outputs
-      std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + input_file;
+      std::string BAT_out_prefix_cal = res_dir+cal.GetSafeName() + "_" + calibration_output_file;
 
       cal.WriteMarkovChain(BAT_out_prefix_cal + "_mcmc.root", "RECREATE");
 
@@ -408,7 +419,7 @@ int main(int argc, char *argv[]) {
             << x_mean[i] <<"\t"<< x_std[i] <<"\t"  // x and x_std
             << y_mean[i] <<"\t"<< y_std[i] <<"\t"      // y and y_std
                 
-            << corrLx[i] <<"\t"<< corrLy[i]<<"\t"<< corrxy[i]        // Correlations
+//             << corrLx[i] <<"\t"<< corrLy[i]<<"\t"<< corrxy[i]        // Correlations
                 
             << std::endl;
             i++;

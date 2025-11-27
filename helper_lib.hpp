@@ -18,6 +18,7 @@ struct Config {
     int end_ind = 0;
     int nPoints = 0;
     std::string output_file = "out.txt";
+    std::string calibration_output_file = "out.txt";
     bool plot = false;
     bool write_chains = false;
     bool write_log = false;
