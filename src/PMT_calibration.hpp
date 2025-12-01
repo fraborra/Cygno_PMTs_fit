@@ -22,7 +22,11 @@
 
 #include "Math/ProbFunc.h"
 
-class PMTcalibration : public BCModel
+#include "PMT_association.hpp"
+#include "helper_lib.hpp"
+
+
+class PMTcalibration : public PMTassociation
 {
 public:
 
@@ -34,11 +38,10 @@ public:
 
     double LogLikelihood(const std::vector<double>& pars);
 
-    double D2(double x, double y, int i);
+    // double D2(double x, double y, int i);
     
-    double EvaluateSigma(double mu);
-
-    
+    // double EvaluateSigma(double mu);
+        
 private:
     double Lmax;
     double cmax;
@@ -73,5 +76,8 @@ private:
     std::vector<double> yTrue;
 
 };
+
+void runCalibrationFit(const Config config);
+
 
 #endif /* PMT_calibration_hpp */

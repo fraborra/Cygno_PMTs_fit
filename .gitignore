@@ -4,6 +4,7 @@
 *.txt
 *.pdf
 *.png
+note.md
 
 #others
 *.ipynb

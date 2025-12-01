@@ -1,10 +1,6 @@
 #include "helper_lib.hpp"
 #include <sstream>
 
-void how_to_use() {
-    std::cout << "Usage: program -m mode -i input_file -s start_ind -e end_ind -o output_file [-p] [-c] [-l] [-h]" << std::endl;
-}
-
 // Config file reading
 bool stringToBool(const std::string& str) {
     return str == "true" || str == "1";

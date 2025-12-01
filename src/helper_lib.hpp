@@ -8,8 +8,6 @@
 #include <map>
 #include <stdexcept>
 
-void how_to_use();
-
 // config structure
 struct Config {
     std::string mode;
@@ -18,7 +16,7 @@ struct Config {
     int end_ind = 0;
     int nPoints = 0;
     std::string output_file = "out.txt";
-    std::string calibration_output_file = "out.txt";
+    std::string calibration_output_tag = "tmp";
     bool plot = false;
     bool write_chains = false;
     bool write_log = false;
@@ -29,9 +27,18 @@ struct Config {
     double c4 = 1;
 };
 
+//  single point result structure
+struct SinglePointResult {
+    double L_mean;
+    double L_std;
+    double x_mean;
+    double x_std;
+    double y_mean;
+    double y_std;
+};
+
 // function to read config file
 Config readConfigFile(const std::string& filename);
-
 
 // class for the reading of the input file
 class DataReader {

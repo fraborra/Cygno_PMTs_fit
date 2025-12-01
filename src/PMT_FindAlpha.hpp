@@ -22,7 +22,11 @@
 
 #include "Math/ProbFunc.h"
 
-class PMTfindalpha : public BCModel
+#include "PMT_association.hpp"
+#include "helper_lib.hpp"
+
+
+class PMTfindalpha : public PMT_calibration
 {
 public:
 
@@ -32,10 +36,10 @@ public:
 
     ~PMTfindalpha(){};
 
-    double LogLikelihood(const std::vector<double>& pars);
+    // double LogLikelihood(const std::vector<double>& pars);
 
-    double D2(double x, double y, int i);
-    
+    // double D2(double x, double y, int i);
+    // double EvaluateSigma(double mu);
 private:
     double Lmax;
     double cmax;
@@ -70,5 +74,7 @@ private:
     std::vector<double> yTrue;
 
 };
+
+void runAlphaFit(const Config config);
 
 #endif /* PMT_FindAlpha_hpp */

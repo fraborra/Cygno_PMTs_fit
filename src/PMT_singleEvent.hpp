@@ -5,8 +5,8 @@
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23
 //
-#ifndef PMT_association_hpp
-#define PMT_association_hpp
+#ifndef PMT_singleEvent_hpp
+#define PMT_singleEvent_hpp
 
 #include <BAT/BCModel.h>
 
@@ -26,19 +26,19 @@
 #include "helper_lib.hpp"
 
 
-class PMTassociation : public BCModel
+class PMTSingleEvent : public PMTassociation
 {
 public:
 
-    PMTassociation(const std::string& mode, int nth, double *L, double *c_tmp);
+    PMTSingleEvent(const std::string& mode, int nth, double *L, double *c_tmp);
 
-    ~PMTassociation(){};
+    ~PMTSingleEvent(){};
 
     double LogLikelihood(const std::vector<double>& pars);
 
-    double D2(double x, double y, int i);
+    // double D2(double x, double y, int i);
     
-    double EvaluateSigma(double mu);
+    // double EvaluateSigma(double mu);
     
 private:
     double Lmax;
@@ -67,7 +67,8 @@ private:
 
 };
 
-void runAssociationFit(const Config config);
+SinglePointResult runSingleEvent(const SinglePointResult q_values);
 
+void saveSingleEventResults(const SinglePointResult results);
 
-#endif /* PMT_association_hpp */
+#endif /* PMT_asingleEvent_hpp */

@@ -18,6 +18,10 @@
 SRC_DIR = src
 BUILD_DIR = build
 BIN_DIR = bin
+LOGDIR = logs
+
+# create build, bin and log directories if they do not exist
+$(shell mkdir -p $(BUILD_DIR) $(BIN_DIR) $(LOGDIR))
 
 # List of all class (model) sources used in the program,
 # separated by spaces. A backslash indicates continuation
