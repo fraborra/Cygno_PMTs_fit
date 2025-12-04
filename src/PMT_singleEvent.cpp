@@ -1,5 +1,5 @@
 // 
-//  PMT_association.cpp
+//  PMTSingleEvent.cpp
 //  Francesco Borra, Dic 2025
 //  
 #include <TMath.h>
@@ -11,7 +11,7 @@
 // #include <nlohmann/json.hpp>
 
 
-// PMTfit class
+// PMTSingleEvent class
 PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth, 
                                double *L, double *c_tmp) : PMTassociation()
 {

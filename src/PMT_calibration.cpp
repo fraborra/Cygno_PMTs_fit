@@ -145,6 +145,10 @@ void runCalibrationFit(const Config config){
 
     // read data
     DataReader data(input_file, mode);
+    
+    int index_max = static_cast<int>(data.getRun().size());
+    if (end_ind == -1 || index_max<end_ind) {end_ind = index_max;}
+
 
     //  Create results folder if not existing
     std::string res_dir;

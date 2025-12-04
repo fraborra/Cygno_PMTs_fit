@@ -142,8 +142,11 @@ void runFindAlphaFit(const Config config){
     
     // Read data
     DataReader data(input_file, mode);
+    
+    int index_max = static_cast<int>(data.getRun().size());
+    if (end_ind == -1 || index_max<end_ind) {end_ind = index_max;}
 
-    // loop over the nPoints points to store data
+    // store data
     for(int point = start_ind; point<end_ind; point++){
         // HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
         L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);

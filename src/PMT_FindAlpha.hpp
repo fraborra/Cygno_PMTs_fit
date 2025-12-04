@@ -37,7 +37,7 @@ public:
 
     ~PMTfindalpha(){};
 
-    double LogLikelihood override (const std::vector<double>& pars);
+    double LogLikelihood (const std::vector<double>& pars) override;
 
     // double D2(double x, double y, int i);
     // double EvaluateSigma(double mu);

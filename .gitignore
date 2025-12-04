@@ -9,6 +9,9 @@ note.md
 #others
 *.ipynb
 
+#data folder (only example on github)
+data/
+
 # Compiled object files
 *.o
 *.obj
