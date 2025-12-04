@@ -1,6 +1,5 @@
 //
 //  PMT_association.hpp
-//  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23
@@ -29,12 +28,12 @@
 class PMTassociation : public BCModel
 {
 public:
-
+    PMTassociation(){};
     PMTassociation(const std::string& mode, int nth, double *L, double *c_tmp);
 
-    ~PMTassociation(){};
+    virtual ~PMTassociation(){};
 
-    double LogLikelihood(const std::vector<double>& pars);
+    virtual double LogLikelihood(const std::vector<double>& pars);
 
     double D2(double x, double y, int i);
     

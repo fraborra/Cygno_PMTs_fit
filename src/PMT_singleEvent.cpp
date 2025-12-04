@@ -1,20 +1,19 @@
-//
+// 
 //  PMT_association.cpp
-//  LIMEPMTfits
-//
-//  Created by Stefano Piacentini on 23/09/22.
-//  Modified by Francesco Borra on 28/06/23.
-//
-
+//  Francesco Borra, Dic 2025
+//  
 #include <TMath.h>
 #include <BAT/BCMath.h>
 #include <cmath>
 #include "PMT_association.hpp"
+#include "PMT_singleEvent.hpp"
 #include "helper_lib.hpp"
+// #include <nlohmann/json.hpp>
+
 
 // PMTfit class
 PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth, 
-                               double *L, double *c_tmp) : BCModel(mode)
+                               double *L, double *c_tmp) : PMTassociation()
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
@@ -97,18 +96,19 @@ PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth,
 
 // run fit function
 SinglePointResult runSingleEvent(
-                    const std::array<double, 4>& q_values
-                    const int NIterPrerun = 100000
-                    const int NIter = 10000
-                    const bool second_round = false
+                    const double q_values[4],
+                    const double calib[4],
+                    int NIterPrerun = 100000,
+                    int NIter = 10000,
+                    bool second_round = false
                     ) 
 {
 
-    double c1 = 1;
-    double c2 = config.c2/config.c1;
-    double c3 = config.c3/config.c1;
-    double c4 = config.c4/config.c1;
-    bool write_log = config.write_log;
+    std::string mode = "association";
+    double c1 = calib[0];
+    double c2 = calib[1]/c1;
+    double c3 = calib[2]/c1;
+    double c4 = calib[3]/c1;
     
     double c_list[4] = {c1, c2, c3, c4};
 
@@ -123,21 +123,14 @@ SinglePointResult runSingleEvent(
     L[1] = q_values[1];
     L[2] = q_values[2];
     L[3] = q_values[3];
-
-    // Create log
-    if (write_log) {
-        BCLog::OpenLog("./logs/singleEvent_log.txt", BCLog::detail, BCLog::detail);
-    }
-
+    
     // INITIALIZE THE MODEL
-    PMTSingleEvent::PMTSingleEvent m(mode, Nch, L, c_list);
+    PMTSingleEvent m(mode, Nch, L, c_list);
 
     // Setting MCMC algorithm and precision
     m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
     m.SetPrecision(BCEngineMCMC::kMedium);
-    if (write_log) {
-        BCLog::OutSummary("Model created");
-    }
+
     // Setting prerun iterations to 10^5 (for fast integration, if it does not converge it is saved as not converged)
     m.SetNIterationsPreRunMax(NIterPrerun);
 
@@ -158,6 +151,7 @@ SinglePointResult runSingleEvent(
     // Check if the pre run has converged:
     int status = m.GetNIterationsConvergenceGlobal();
 
+    SinglePointResult results;
     // start results storing
     if (status>0){ // If prerun converged then store the results
         BCH1D posteriorL = m.GetMarginalized(H1Indices[0]);
@@ -177,19 +171,20 @@ SinglePointResult runSingleEvent(
         BCH2D postLy = m.GetMarginalized(H1Indices[0], H1Indices[2]);
         BCH2D postxy = m.GetMarginalized(H1Indices[1], H1Indices[2]);
         
-        double corrLx = postLx.GetHistogram()->GetCorrelationFactor();
-        double corrLy = postLy.GetHistogram()->GetCorrelationFactor();
-        double corrxy = postxy.GetHistogram()->GetCorrelationFactor();
+//         double corrLx = postLx.GetHistogram()->GetCorrelationFactor();
+//         double corrLy = postLy.GetHistogram()->GetCorrelationFactor();
+//         double corrxy = postxy.GetHistogram()->GetCorrelationFactor();
 
-        SinglePointResult results = {L_mean, L_std, x_mean, x_std, y_mean, y_std};
+        results = {L_mean, L_std, x_mean, x_std, y_mean, y_std};
 
     } else if (!second_round) { // If prerun not converged try again with more iterations and more prerun iterations
 
         NIter = 50000;   //number of step per chain
         NIterPrerun = 500000; //number of prerun iterations
 
-        SinglePointResult results = PMTSingleEvent::runSingleEvent(
+        results = runSingleEvent(
                     q_values,
+                    calib,
                     NIterPrerun,
                     NIter,
                     second_round = true
@@ -197,58 +192,49 @@ SinglePointResult runSingleEvent(
 
     } else {    // If prerun not converged again then store -1 to all the parameters
     
-        double L_mean = -1.;   
-        double L_std  = -1.;
+//         double L_mean = -1.;   
+//         double L_std  = -1.;
         
-        double x_mean = -1.;
-        double x_std  = -1.;
+//         double x_mean = -1.;
+//         double x_std  = -1.;
         
-        double y_mean = -1.;
-        double y_std  = -1.;
+//         double y_mean = -1.;
+//         double y_std  = -1.;
         
-        double corrLx = -1.;
-        double corrLx = -1.;
-        double corrLx = -1.;
+//         double corrLx = -1.;
+//         double corrLx = -1.;
+//         double corrLx = -1.;
         std::cout << "association, status < 0" << std::endl;
     
-        SinglePointResult results = {L_mean, L_std, x_mean, x_std, y_mean, y_std, corrLx, corrLy, corrxy};
+        results = {-1, -1, -1, -1, -1, -1};
 
     }
 
-    if (write_log) {
-        // Close log file
-        BCLog::OutSummary("Exiting");
-        BCLog::CloseLog();
-    }
-
-    outfile.close();
     return results;
 
 }
 
-void saveSingleEventResults(
-        const SinglePointResult results,
-        ) 
-{
-    std::string res_dir = "./output_singleEvent";
-    int com = std::system(("mkdir -p "+res_dir).c_str());
+// void saveSingleEventResults(const SinglePointResult results) 
+// {
+//     std::string res_dir = "./output_singleEvent";
+//     int com = std::system(("mkdir -p "+res_dir).c_str());
         
-    if(com == 0) {
-    std::cerr << "Failed to create directory: " << res_dir << std::endl;
-    }
-    res_dir += "/";
+//     if(com == 0) {
+//     std::cerr << "Failed to create directory: " << res_dir << std::endl;
+//     }
+//     res_dir += "/";
 
-    const std::string& output_file = res_dir+"/results.json";
+//     const std::string& output_file = res_dir+"/results.json";
 
-    // save results to json
-    nlohmann::json j;
+//     // save results to json
+//     nlohmann::json j;
 
-    j["L_mean"] = results.L_mean;
-    j["L_std"]  = results.L_std;
-    j["x_mean"] = results.x_mean;
-    j["x_std"]  = results.x_std;
-    j["y_mean"] = results.y_mean;
-    j["y_std"]  = results.y_std;
-    
-    std::ofstream(output_file) << j.dump(4); // 4 = indentation
-}
+//     j["L_mean"] = results.L_mean;
+//     j["L_std"]  = results.L_std;
+//     j["x_mean"] = results.x_mean;
+//     j["x_std"]  = results.x_std;
+//     j["y_mean"] = results.y_mean;
+//     j["y_std"]  = results.y_std;
+
+//     std::ofstream(output_file) << j.dump(4); // 4 = indentation
+// }

@@ -1,6 +1,5 @@
 //
 //  PMT_calibration.hpp
-//  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23
@@ -29,14 +28,14 @@
 class PMTcalibration : public PMTassociation
 {
 public:
-
+    PMTcalibration(){};
     PMTcalibration(const std::string& mode, int nth, int nPoints, 
                    const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
                    const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y);
 
     ~PMTcalibration(){};
 
-    double LogLikelihood(const std::vector<double>& pars);
+    double LogLikelihood override (const std::vector<double>& pars);
 
     // double D2(double x, double y, int i);
     
@@ -48,12 +47,12 @@ private:
     std::string mode_;
     unsigned int nPoints;
 
-    // prior parameters
-    double L_mean = 0;
-    double L_std = 0;
+//     // prior parameters
+//     double L_mean = 0;
+//     double L_std = 0;
     
-    double c_mean[4] = {0.};
-    double c_std[4] = {0.};
+//     double c_mean[4] = {0.};
+//     double c_std[4] = {0.};
     
     //PMT positions (in cm)
     double x1 = 2.3;

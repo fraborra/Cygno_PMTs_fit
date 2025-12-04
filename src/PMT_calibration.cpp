@@ -1,6 +1,5 @@
 //
 //  PMT_calibration.cpp
-//  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23.
@@ -16,7 +15,7 @@
 // PMTfit class
 PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP, 
                 const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
-                const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y): BCModel(mode)
+                const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y) : PMTassociation()
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
@@ -27,7 +26,7 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP,
     nPoints = nP;
     // std::cout << "Dentro il fit" << std::endl << std::endl;
 
-    for (int i = 0; i < nPoints; ++i) {
+    for (unsigned int i = 0; i < nPoints; ++i) {
         data[0].push_back(L1_inp[i]);
         data[1].push_back(L2_inp[i]);
         data[2].push_back(L3_inp[i]);
@@ -122,7 +121,7 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
 //     return 0.;
 // }
 
-void PMTcalibration::runCalibrationFit(const Config config){
+void runCalibrationFit(const Config config){
 
     // Setting chains parameters
     int Nch = 12;          //number of parallel MCMC chains
@@ -142,6 +141,10 @@ void PMTcalibration::runCalibrationFit(const Config config){
     int end_ind = config.end_ind;
     int nPoints = config.nPoints;
     std::string output_tag = config.calibration_output_tag;
+    bool plot = config.plot;
+
+    // read data
+    DataReader data(input_file, mode);
 
     //  Create results folder if not existing
     std::string res_dir;
@@ -213,6 +216,5 @@ void PMTcalibration::runCalibrationFit(const Config config){
     // Close log file
     BCLog::OutSummary("Exiting");
     BCLog::CloseLog();
-    
-    return 0;
+
 }

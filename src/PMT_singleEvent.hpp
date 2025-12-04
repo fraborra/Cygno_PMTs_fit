@@ -1,10 +1,8 @@
 //
 //  PMT_association.hpp
-//  LIMEPMTfits
+//  Francesco Borra, Dic 2025
 //
-//  Created by Stefano Piacentini on 23/09/22.
-//  Modified by Francesco Borra on 28/06/23
-//
+
 #ifndef PMT_singleEvent_hpp
 #define PMT_singleEvent_hpp
 
@@ -31,10 +29,10 @@ class PMTSingleEvent : public PMTassociation
 public:
 
     PMTSingleEvent(const std::string& mode, int nth, double *L, double *c_tmp);
-
+    
     ~PMTSingleEvent(){};
 
-    double LogLikelihood(const std::vector<double>& pars);
+//     double LogLikelihood(const std::vector<double>& pars);
 
     // double D2(double x, double y, int i);
     
@@ -67,8 +65,12 @@ private:
 
 };
 
-SinglePointResult runSingleEvent(const SinglePointResult q_values);
+SinglePointResult runSingleEvent(const double q_values[4],
+                                 const double calib[4],
+                                 int NIterPrerun,
+                                 int NIter,
+                                 bool second_round);
 
-void saveSingleEventResults(const SinglePointResult results);
+// void saveSingleEventResults(const SinglePointResult results);
 
 #endif /* PMT_asingleEvent_hpp */

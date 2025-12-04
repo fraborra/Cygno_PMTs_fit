@@ -23,20 +23,21 @@
 #include "Math/ProbFunc.h"
 
 #include "PMT_association.hpp"
+#include "PMT_calibration.hpp"
 #include "helper_lib.hpp"
 
 
-class PMTfindalpha : public PMT_calibration
+class PMTfindalpha : public PMTcalibration
 {
 public:
 
     PMTfindalpha(const std::string& mode, int nth, int nPoints, 
                    const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
-                   const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y);
+                   const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y, double *c_tmp);
 
     ~PMTfindalpha(){};
 
-    // double LogLikelihood(const std::vector<double>& pars);
+    double LogLikelihood override (const std::vector<double>& pars);
 
     // double D2(double x, double y, int i);
     // double EvaluateSigma(double mu);
@@ -50,8 +51,7 @@ private:
     double L_mean = 0;
     double L_std = 0;
     
-    double c_mean[4] = {0.};
-    double c_std[4] = {0.};
+    double c[4] = {0.};
     
     //PMT positions (in cm)
     double x1 = 2.3;
@@ -75,6 +75,6 @@ private:
 
 };
 
-void runAlphaFit(const Config config);
+void runFindAlphaFit(const Config config);
 
 #endif /* PMT_FindAlpha_hpp */

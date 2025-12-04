@@ -11,6 +11,7 @@
 #include <BAT/BCMath.h>
 #include <cmath>
 
+#include "PMT_calibration.hpp"
 #include "PMT_association.hpp"
 #include "helper_lib.hpp"
 
@@ -18,18 +19,20 @@
 // PMTfindalpha class
 PMTfindalpha::PMTfindalpha(const std::string& mode, int nth, int nP, 
                 const std::vector<double>& L1_inp, const std::vector<double>& L2_inp, const std::vector<double>& L3_inp, 
-                const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y): BCModel(mode)
+                const std::vector<double>& L4_inp, const std::vector<double>&x, const std::vector<double>& y, double *c_tmp) : PMTcalibration()
 {
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
     Lmax = 500000;
-    double Lmin = 0.;// if trying to fit higher energy spot/longer integrals must be modified!
-    // The prior for the c_i can be tweaked to reduce parameter space
-    cmax = 10;
+    double Lmin = 0.;
+    for (int i = 0; i < 4; ++i) {
+        c[i] = c_tmp[i];
+    }
+
     nPoints = nP;
     
-    for (int i = 0; i < nPoints; ++i) {
+    for (unsigned int i = 0; i < nPoints; ++i) {
         data[0].push_back(L1_inp[i]);
         data[1].push_back(L2_inp[i]);
         data[2].push_back(L3_inp[i]);
@@ -37,16 +40,15 @@ PMTfindalpha::PMTfindalpha(const std::string& mode, int nth, int nP,
 
         xTrue.push_back(x[i]);
         yTrue.push_back(y[i]);
-	std::cout << L1_inp[i] << std::endl;
     }
         
     //DEFINING parameters
-     if (mode_.compare("PMTfindalpha") == 0){
+    if (mode_.compare("PMTfindalpha") == 0){
         AddParameter("L", Lmin, Lmax, "L", "[a.u.]");
-	GetParameter("L").SetPriorConstant();
-        
-	AddParameter("alpha",2.,6.,"#alpha","");
-	GetParameter("alpha").SetPriorConstant();
+        GetParameter("L").SetPriorConstant();
+
+        AddParameter("alpha",2.,6.,"#alpha","");
+        GetParameter("alpha").SetPriorConstant();
 	
     } else {
         throw std::runtime_error("Unknown model '"+mode_+"'.\n");
@@ -61,22 +63,24 @@ PMTfindalpha::PMTfindalpha(const std::string& mode, int nth, int nP,
 double PMTfindalpha::LogLikelihood(const std::vector<double>& pars) {
 
     double LL = 0.;
-    double c[4] = {1.0,0.965,0.860,0.827};
 
-    // NEED TO RESTORE A LOOP FOR NPOINTS
     for(unsigned int i=0; i<nPoints; i++) { // i == nPoint index
 
-        for(unsigned int j=0; j<4; j++) { // j == PMT index
+        for(int j=0; j<4; j++) { // j == PMT index
+
             double Lij = data[j][i];  // here the data
 
-            double sLij = 0.1*Lij; // for now set to 10% of the integral
             
-	    double rij = D2(xTrue[i], yTrue[i], j);     // compute r_i**2
-            LL += BCMath::LogGaus(Lij,                            // x, namely Lj
-                                 (pars[0]*c[j])/(pow(rij, 0.5*pars[1])), // mu, namely the light computed in the step (c_i * Lj / r_i^4)
-                                 sLij,                            // sigma
-                                 true                             // norm factor
-                                 );
+            double rij = D2(xTrue[i], yTrue[i], j);             // compute r_i**2
+            double mu = (pars[0]*c[j])/(pow(rij, 0.5*pars[1])); // compute mu
+
+            double sLij = EvaluateSigma(mu);        // compute uncertainty on Lj
+
+            LL += BCMath::LogGaus(Lij,              // x, namely Lj
+                                    mu,             // mu, namely the light computed in the step (c_i * Lj / r_i^4)
+                                    sLij,           // sigma
+                                    true            // norm factor
+                                    );
         }
     }
 
@@ -101,7 +105,7 @@ double PMTfindalpha::LogLikelihood(const std::vector<double>& pars) {
 // }
 
 
-void PMTfindalpha::runAlphaFit(const Config config){
+void runFindAlphaFit(const Config config){
     // Setting chains parameters
     int Nch = 12;          //number of parallel MCMC chains
     int NIter = 100000;    //number of step per chain
@@ -118,8 +122,14 @@ void PMTfindalpha::runAlphaFit(const Config config){
     std::string input_file = config.input_file;
     int start_ind = config.start_ind;
     int end_ind = config.end_ind;
-    int nPoints = config.nPoints;
     std::string output_tag = config.calibration_output_tag;
+    bool plot = config.plot;
+    double c1 = 1;
+    double c2 = config.c2/config.c1;
+    double c3 = config.c3/config.c1;
+    double c4 = config.c4/config.c1;
+    double c_list[4] = {c1, c2, c3, c4};
+
 
     //  Create results folder if not existing
     std::string res_dir;
@@ -129,9 +139,12 @@ void PMTfindalpha::runAlphaFit(const Config config){
     std::cerr << "Failed to create directory: " << res_dir << std::endl;
     }
     res_dir += "/";
+    
+    // Read data
+    DataReader data(input_file, mode);
 
     // loop over the nPoints points to store data
-    for(int point = 0; point<end_ind; point++){
+    for(int point = start_ind; point<end_ind; point++){
         // HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT CONSTANT IS ALL GOOD
         L1.push_back(data.getL1()[point]/data.getSc_integral()[point]*10000);
         L2.push_back(data.getL2()[point]/data.getSc_integral()[point]*10000);
@@ -146,7 +159,7 @@ void PMTfindalpha::runAlphaFit(const Config config){
     BCLog::OpenLog("./logs/findalpha_log.txt", BCLog::detail, BCLog::detail);
 
     // INITIALIZE THE MODEL
-    PMTfindalpha alpha(mode, Nch, end_ind, L1, L2, L3, L4, x, y);
+    PMTfindalpha alpha(mode, Nch, end_ind, L1, L2, L3, L4, x, y, c_list);
 
     // Setting MCMC algorithm and precision
     alpha.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
@@ -191,9 +204,6 @@ void PMTfindalpha::runAlphaFit(const Config config){
     // Close log file
     BCLog::OutSummary("Exiting");
     BCLog::CloseLog();
-    
-    return 0;
-        
 
 }
 

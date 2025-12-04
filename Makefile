@@ -29,8 +29,9 @@ $(shell mkdir -p $(BUILD_DIR) $(BIN_DIR) $(LOGDIR))
 CXXSRCS = $(SRC_DIR)/PMT_association.cpp \
           $(SRC_DIR)/helper_lib.cpp \
           $(SRC_DIR)/PMT_calibration.cpp \
-          $(SRC_DIR)/PMT_FindAlpha.cpp
-
+          $(SRC_DIR)/PMT_FindAlpha.cpp \
+		  $(SRC_DIR)/PMT_singleEvent.cpp
+          
 # List of all program sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line
@@ -40,7 +41,7 @@ TARGET = $(BIN_DIR)/fitter
 
 # compiler and flags
 CXX       = g++
-CXXFLAGS  = -g -O2 -Wall -fPIC -Wno-deprecated
+CXXFLAGS  = -g -O2 -Wall -fPIC -Wno-deprecated -Iexternal/pybind11/include
 LD        = /usr/bin/ld -m elf_x86_64
 LDFLAGS   = -g -O2  -fopenmp
 

@@ -1,6 +1,5 @@
 //
 //  PMT_association.cpp
-//  LIMEPMTfits
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23.
@@ -58,7 +57,6 @@ double PMTassociation::LogLikelihood(const std::vector<double>& pars) {
         double rij = D2(pars[1], pars[2], j);          // compute r_i**2
         double mu = (pars[0]*c[j])/(pow(rij, 2));      // compute mu
 
-//         double sLj = 0.1*Lj; // for now set to 10% of the integral        
         double sLj = EvaluateSigma(mu);        // compute uncertainty on Lj
         
         LL += BCMath::LogGaus(Lj,               // x, namely Lj
@@ -97,7 +95,7 @@ double PMTassociation::D2(double x, double y, int i) {
 }
 
 // run fit function
-void PMTassociation::runAssociationFit(const Config config){
+void runAssociationFit(const Config config){
 
     std::string mode = config.mode;
     std::string input_file = config.input_file;
@@ -169,7 +167,7 @@ void PMTassociation::runAssociationFit(const Config config){
         }
 
         // INITIALIZE THE MODEL
-        PMTassociation::PMTassociation m(mode, Nch, L, c_list);
+        PMTassociation m(mode, Nch, L, c_list);
 
         // Setting MCMC algorithm and precision
         m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
