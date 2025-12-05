@@ -31,7 +31,7 @@ CXXSRCS = $(SRC_DIR)/PMT_association.cpp \
           $(SRC_DIR)/PMT_calibration.cpp \
           $(SRC_DIR)/PMT_FindAlpha.cpp \
 		  $(SRC_DIR)/PMT_singleEvent.cpp
-          
+
 # List of all program sources used in the program,
 # separated by spaces. A backslash indicates continuation
 # on the next line

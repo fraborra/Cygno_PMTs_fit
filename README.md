@@ -15,7 +15,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
     git clone https://github.com/fraborra/Cygno_PMTs_fit.git
     cd Cygno_PMTs_fit
     ```
-    
+
 2. **Install dependencies:**
     Make sure BAT is installed and properly configured.
 
@@ -29,7 +29,7 @@ To use this project, you need to have BAT (Bayesian Analysis Toolkit) installed.
 ## Usage Instructions
 
 1. **Run the main script:**
-    To run the program use the following use the following command in the terminal: 
+    To run the program use the following use the following command in the terminal:
     ```bash
     ./runfit configuration.conf
     ```
@@ -100,7 +100,7 @@ Each line in the output file will contain the calculated values of these paramet
 An example can be found in `golden_out.txt`
 
 2. **PMTcalibration:**
-   
+
 The PMTcalibration output will give only the chains of the computed "calibration parameters". How to read the chains can be found in the example [read_chains.ipynb](./read_chains.ipynb)
 
 =======
@@ -115,5 +115,5 @@ Special thanks Stefano Piacentini and Matteo Folcarelli.
 
 ## License
 
-This project is licensed under the GNU General Public License v3 (GPLv3).  
+This project is licensed under the GNU General Public License v3 (GPLv3).
 See the LICENSE file for details: <https://www.gnu.org/licenses/>.

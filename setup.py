@@ -1,13 +1,15 @@
-from setuptools import setup, Extension
 import os
-import sys
-import pybind11
 import subprocess
+import sys
+
+import pybind11
+from setuptools import Extension, setup
 
 # Path to local pybind11
 local_pybind11 = os.path.join("external", "pybind11", "include")
 root_cflags = subprocess.check_output(["root-config", "--cflags"], text=True).split()
-root_libs   = subprocess.check_output(["root-config", "--libs"],   text=True).split()
+root_libs = subprocess.check_output(["root-config", "--libs"], text=True).split()
+
 
 def find_bat():
     # 1. BAT_PREFIX explicitly provided
@@ -45,14 +47,10 @@ def find_bat():
     )
     sys.exit(1)
 
+
 BAT_INCLUDE, BAT_LIB = find_bat()
 
-include_dirs = [
-    local_pybind11,
-    "src/",
-    pybind11.get_include(),  # fallback
-    BAT_INCLUDE
-]
+include_dirs = [local_pybind11, "src/", pybind11.get_include(), BAT_INCLUDE]  # fallback
 
 ext_modules = [
     Extension(
@@ -63,14 +61,12 @@ ext_modules = [
             "src/PMT_calibration.cpp",
             "src/PMT_FindAlpha.cpp",
             "src/PMT_singleEvent.cpp",
-	    "src/helper_lib.cpp"
+            "src/helper_lib.cpp",
         ],
         include_dirs=include_dirs,
-        library_dirs=[
-	    BAT_LIB
-	],
-        libraries=["BAT"],       # linker automatically find libBAT.so
-        extra_compile_args=["-std=c++11", "-O3", "-fPIC", "-fopenmp"]+ root_cflags,
+        library_dirs=[BAT_LIB],
+        libraries=["BAT"],  # linker automatically find libBAT.so
+        extra_compile_args=["-std=c++11", "-O3", "-fPIC", "-fopenmp"] + root_cflags,
         extra_link_args=["-fopenmp"] + root_libs,
     )
 ]

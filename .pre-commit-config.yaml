@@ -1,0 +1,47 @@
+repos:
+  # === C++ Section ===
+  # clang-format via mirror pre-commit (SSH)
+  - repo: git@github.com:pre-commit/mirrors-clang-format.git
+    rev: v21.1.7
+    hooks:
+      - id: clang-format
+        args: ["-style=file", "--assume-filename", "dummy.cpp"]
+
+# # clang-tidy via mirror pre-commit (SSH)
+#   - repo: git@github.com:conda-incubator/pre-commit-mirrors-clang-tidy.git
+#     rev: 21.1.6
+#     hooks:
+#       - id: clang-tidy-conda
+#         args: ["-checks=*,-clang-diagnostic-error"]
+
+# === Python Section ===
+  # Official pre-commit hooks for Python
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/psf/black
+    rev: 25.11.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (Python imports)
+        language_version: python3
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        language_version: python3
+        args:
+          - --max-line-length=88       # lunghezza massima linea
+          - --ignore=E203,W503,F401   # regole da ignorare
