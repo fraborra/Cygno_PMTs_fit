@@ -47,19 +47,19 @@ public:
         readFile(input_file, mode);
     }
 
-    const std::vector<int>& getRun();
-    const std::vector<int>& getEvent();
-    const std::vector<int>& getTrigger();
-    const std::vector<int>& getIndx();
+    const std::vector<int>& getRun(){return run;};
+    const std::vector<int>& getEvent(){return event;};
+    const std::vector<int>& getTrigger(){return trigger;};
+    const std::vector<int>& getIndx(){return indx;};
 
-    const std::vector<double>& getXtrue();
-    const std::vector<double>& getYtrue();
-    const std::vector<double>& getL1();
-    const std::vector<double>& getL2();
-    const std::vector<double>& getL3();
-    const std::vector<double>& getL4();
+    const std::vector<double>& getXtrue(){return xtrue;};
+    const std::vector<double>& getYtrue(){return ytrue;};
+    const std::vector<double>& getL1(){return L1;};
+    const std::vector<double>& getL2(){return L2;};
+    const std::vector<double>& getL3(){return L3;};
+    const std::vector<double>& getL4(){return L4;};
 
-    const std::vector<double>& getSc_integral();
+    const std::vector<double>& getSc_integral(){return sc_integral;};
 
 private:
     std::vector<int> run;

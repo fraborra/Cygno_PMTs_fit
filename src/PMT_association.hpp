@@ -40,8 +40,10 @@ public:
     double EvaluateSigma(double mu);
     
 private:
-    double Lmax;
+    double Lmax = 40000; // The smaller the smaller the parameter space --> can be changed if needed
+                         // if trying to fit higher energy spot/longer integrals must be modified!
     double c[4] = {1.};
+    
     std::string mode_;
         
     //PMT positions (in cm)
@@ -60,10 +62,6 @@ private:
     double zGEM = 19;
 
     double data[4] = {0.};
-
-    double xTrue = 0.;
-    double yTrue = 0.;
-
 };
 
 void runAssociationFit(const Config config);

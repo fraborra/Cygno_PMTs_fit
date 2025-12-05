@@ -39,19 +39,13 @@ public:
 
     double LogLikelihood (const std::vector<double>& pars) override;
 
-    // double D2(double x, double y, int i);
-    // double EvaluateSigma(double mu);
 private:
-    double Lmax;
-    double cmax;
+    double Lmax = 500000; // can be changed if needed
+
     std::string mode_;
     unsigned int nPoints;
 
-    // prior parameters
-    double L_mean = 0;
-    double L_std = 0;
-    
-    double c[4] = {0.};
+    double c[4] = {1.};
     
     //PMT positions (in cm)
     double x1 = 2.3;

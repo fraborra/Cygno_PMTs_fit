@@ -19,15 +19,14 @@ PMTassociation::PMTassociation(const std::string& mode, int nth,
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 40000; //The smaller the smaller the parameter space
-
+    
     for (int i = 0; i < 4; ++i) {
         data[i] = L[i];
         c[i] = c_tmp[i];
     }
 
     //DEFINING parameters
-    if (mode_.compare("association") == 0) {
+    if (mode_ == "association") {
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").SetPriorConstant();
 

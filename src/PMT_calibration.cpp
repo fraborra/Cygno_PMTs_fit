@@ -20,11 +20,8 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP,
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 40000; // if trying to fit higher energy spot/longer integrals must be modified!
-    // The prior for the c_i can be tweaked to reduce parameter space
-    cmax = 20;
+
     nPoints = nP;
-    // std::cout << "Dentro il fit" << std::endl << std::endl;
 
     for (unsigned int i = 0; i < nPoints; ++i) {
         data[0].push_back(L1_inp[i]);
@@ -37,7 +34,7 @@ PMTcalibration::PMTcalibration(const std::string& mode, int nth, int nP,
     }
         
     //DEFINING parameters
-     if (mode_.compare("PMTcalibration") == 0){
+     if (mode_ == "PMTcalibration"){
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").Fix(4000.0); // just to have c_i values smaller, can put any value, 
                                        // we are only interested in the c_i ratios
@@ -94,32 +91,6 @@ double PMTcalibration::LogLikelihood(const std::vector<double>& pars) {
     return LL;
 }
 
-// // Evaluate sigma
-// double PMTcalibration::EvaluateSigma(double mu) {
-//     //func: sigma = [0]*sqrt(x)+x*[1]
-//     double par0 = 0.02;
-//     double par1 = 0.06;
-
-//     return par0*sqrt(mu)+par1*mu;
-// }
-
-
-
-// // Function to calculate distance between the PMT and the chosen position
-// double PMTcalibration::D2(double x, double y, int i) {
-//     if (i == 0) {
-//         return (x - x1)*(x - x1) + (y - y1)*(y - y1) + zGEM*zGEM;
-//     } else if (i == 1) {
-//         return (x - x2)*(x - x2) + (y - y2)*(y - y2) + zGEM*zGEM;
-//     } else if (i == 2) {
-//         return (x - x3)*(x - x3) + (y - y3)*(y - y3) + zGEM*zGEM;
-//     } else if (i == 3) {
-//         return (x - x4)*(x - x4) + (y - y4)*(y - y4) + zGEM*zGEM;
-//     } else {
-//         throw std::runtime_error("Uknown value of PMT index.\n");
-//     }
-//     return 0.;
-// }
 
 void runCalibrationFit(const Config config){
 

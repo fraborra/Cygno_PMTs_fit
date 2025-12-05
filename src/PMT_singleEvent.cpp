@@ -1,5 +1,5 @@
 // 
-//  PMTSingleEvent.cpp
+//  PMT_singleEvent.cpp
 //  Francesco Borra, Dic 2025
 //  
 #include <TMath.h>
@@ -18,7 +18,6 @@ PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth,
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 40000; //The smaller the smaller the parameter space
 
     for (int i = 0; i < 4; ++i) {
         data[i] = L[i];
@@ -26,7 +25,7 @@ PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth,
     }
 
     //DEFINING parameters
-    if (mode_.compare("association") == 0) {
+    if (mode_ == "association") {
         AddParameter("L", 0, Lmax, "L", "[a.u.]");
         GetParameter("L").SetPriorConstant();
 
@@ -39,7 +38,7 @@ PMTSingleEvent::PMTSingleEvent(const std::string& mode, int nth,
     } else {
         throw std::runtime_error("Unknown model '"+mode_+"'.\n");
     }
-    
+
     omp_set_dynamic(0);
     omp_set_num_threads(nth);
 }
@@ -125,7 +124,9 @@ SinglePointResult runSingleEvent(
     L[3] = q_values[3];
     
     // INITIALIZE THE MODEL
-    PMTSingleEvent m(mode, Nch, L, c_list);
+    // PMTSingleEvent m(mode, Nch, L, c_list);
+    // testing association class
+    PMTassociation m(mode, Nch, L, c_list);
 
     // Setting MCMC algorithm and precision
     m.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);

@@ -6,7 +6,8 @@ bool stringToBool(const std::string& str) {
     return str == "true" || str == "1";
 }
 
-// function to read config file
+// =====================================     readConfigFile     =================================//
+
 Config readConfigFile(const std::string& filename) {
     Config config;
     std::ifstream file(filename);
@@ -44,45 +45,8 @@ Config readConfigFile(const std::string& filename) {
     return config;
 }
 
-
-// DataReader class
-
-// "returners"
-const std::vector<int>& DataReader::getRun(){
-    return run;
-}
-const std::vector<int>& DataReader::getEvent(){
-    return event;
-}
-const std::vector<int>& DataReader::getTrigger(){
-    return trigger;
-}
-const std::vector<int>& DataReader::getIndx(){
-    return indx;
-}
-const std::vector<double>& DataReader::getXtrue(){
-    return xtrue;
-}
-const std::vector<double>& DataReader::getYtrue(){
-    return ytrue;
-}
-const std::vector<double>& DataReader::getL1(){
-    return L1;
-}
-const std::vector<double>& DataReader::getL2(){
-    return L2;
-}
-const std::vector<double>& DataReader::getL3(){
-    return L3;
-}
-const std::vector<double>& DataReader::getL4(){
-    return L4;
-}
-const std::vector<double>& DataReader::getSc_integral(){
-    return sc_integral;
-}
-
-//File reader
+// =====================================     DataReader class     =================================//
+//DataReader::readFile
 void DataReader::readFile(const std::string& input_file, const std::string& mode){
     std::ifstream file(input_file);
     if (!file.is_open()) {

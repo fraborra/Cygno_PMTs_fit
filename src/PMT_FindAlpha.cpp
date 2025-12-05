@@ -24,7 +24,6 @@ PMTfindalpha::PMTfindalpha(const std::string& mode, int nth, int nP,
     std::cout<<"Starting fit for '"<<mode<<" reconstruction'"<<std::endl;
 
     mode_ = mode;
-    Lmax = 500000;
     double Lmin = 0.;
     for (int i = 0; i < 4; ++i) {
         c[i] = c_tmp[i];
@@ -43,7 +42,7 @@ PMTfindalpha::PMTfindalpha(const std::string& mode, int nth, int nP,
     }
         
     //DEFINING parameters
-    if (mode_.compare("PMTfindalpha") == 0){
+    if (mode_ == "PMTfindalpha"){
         AddParameter("L", Lmin, Lmax, "L", "[a.u.]");
         GetParameter("L").SetPriorConstant();
 
@@ -86,24 +85,6 @@ double PMTfindalpha::LogLikelihood(const std::vector<double>& pars) {
 
     return LL;
 }
-
-
-// // Function to calculate distance between the PMT and the chosen position
-// double PMTfindalpha::D2(double x, double y, int i) {
-//     if (i == 0) {
-//         return (x - x1)*(x - x1) + (y - y1)*(y - y1) + zGEM*zGEM;
-//     } else if (i == 1) {
-//         return (x - x2)*(x - x2) + (y - y2)*(y - y2) + zGEM*zGEM;
-//     } else if (i == 2) {
-//         return (x - x3)*(x - x3) + (y - y3)*(y - y3) + zGEM*zGEM;
-//     } else if (i == 3) {
-//         return (x - x4)*(x - x4) + (y - y4)*(y - y4) + zGEM*zGEM;
-//     } else {
-//         throw std::runtime_error("Uknown value of PMT index.\n");
-//     }
-//     return 0.;
-// }
-
 
 void runFindAlphaFit(const Config config){
     // Setting chains parameters

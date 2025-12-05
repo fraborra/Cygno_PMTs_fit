@@ -37,24 +37,15 @@ public:
 
     double LogLikelihood (const std::vector<double>& pars) override;
 
-    // double D2(double x, double y, int i);
-    
-    // double EvaluateSigma(double mu);
-        
 private:
-    double Lmax;
-    double cmax;
+    double Lmax = 40000; // The smaller the smaller the parameter space --> can be changed if needed
+                         // if trying to fit higher energy spot/longer integrals must be modified!
+    
+    double cmax = 20;     // The prior for the c_i can be tweaked to reduce parameter space
     std::string mode_;
     unsigned int nPoints;
 
-//     // prior parameters
-//     double L_mean = 0;
-//     double L_std = 0;
-    
-//     double c_mean[4] = {0.};
-//     double c_std[4] = {0.};
-    
-    //PMT positions (in cm)
+    // PMT positions (in cm)
     double x1 = 2.3;
     double y1 = 30.7;
 

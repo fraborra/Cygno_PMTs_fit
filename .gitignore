@@ -8,6 +8,7 @@ note.md
 
 #others
 *.ipynb
+*.ipynb_checkpoints/
 
 #data folder (only example on github)
 data/
