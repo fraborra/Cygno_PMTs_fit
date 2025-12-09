@@ -1,6 +1,6 @@
 //
 //  runfit.cpp
-//  LIMEPMTfits
+//  Cygno_PMTs_fit
 //
 //  Created by Stefano Piacentini on 23/09/22.
 //  Modified by Francesco Borra on 28/06/23.
@@ -12,7 +12,6 @@
 #include <omp.h>
 #include <stdexcept>
 #include <string>
-// #include <nlohmann/json.hpp>
 
 #include "PMT_FindAlpha.hpp"
 #include "PMT_association.hpp"

@@ -6,9 +6,7 @@ bool stringToBool(const std::string &str) {
     return str == "true" || str == "1";
 }
 
-// =====================================     readConfigFile
-// =================================//
-
+//====     readConfigFile
 Config readConfigFile(const std::string &filename) {
     Config config;
     std::ifstream file(filename);
@@ -60,8 +58,7 @@ Config readConfigFile(const std::string &filename) {
     return config;
 }
 
-// =====================================     DataReader class
-// =================================//
+// ========= DataReader class
 // DataReader::readFile
 void DataReader::readFile(const std::string &input_file,
                           const std::string &mode) {
