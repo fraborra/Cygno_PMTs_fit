@@ -148,7 +148,7 @@ An example output is provided in `data/golden_out.txt`
 In `PMTcalibration` and `PMTfindAlpha` modes, the program does not produce a simple line-by-line text output.
 Instead, it writes the MCMC chains for the calibration parameters to file(s). These chains contain the sampled values of the calibration parameters over the MCMC iterations.
 
-An example of how to read and analyze these chains is provided in: [read_chains.ipynb](./notebooks/How_read_BAT_output.ipynb)
+An example of how to read and analyze these chains is provided in: [How_to_read_BAT_output.ipynb](./notebooks/How_read_BAT_output.ipynb)
 
 ---
 
