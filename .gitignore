@@ -9,6 +9,7 @@ note.md
 #others
 *.ipynb
 *.ipynb_checkpoints/
+*.egg-info
 
 #data folder (only example on github)
 data/
