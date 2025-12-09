@@ -4,8 +4,15 @@
 *.txt
 *.pdf
 *.png
+note.md
+
 #others
 *.ipynb
+*.ipynb_checkpoints/
+*.egg-info
+
+#data folder (only example on github)
+data/
 
 # Compiled object files
 *.o
@@ -47,7 +54,6 @@ runfit
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 
 # Project-specific files
 build/

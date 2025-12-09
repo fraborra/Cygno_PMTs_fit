@@ -1,0 +1,15 @@
+[build-system]
+requires = [
+    "setuptools>=59",
+    "pybind11",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fitEvent"
+version = "0.1.0"
+description = "PMT fit for Cygno experiment"
+authors = [
+  { name = "Francesco Borra", email = "francesco.borra@uniroma3.it" }
+]
+requires-python = ">=3.8"
