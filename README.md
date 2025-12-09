@@ -172,6 +172,16 @@ pre-commit run --all-files
 
 ---
 
+## Citing This Work
+
+This software was used to produce the results published in:
+
+[**F. D. Amaro _et al_., “Bayesian network 3D event reconstruction in the Cygno optical TPC for dark matter direct detection,” Eur. Phys. J. C 85 (2025) 1261.**](https://doi.org/10.1140/epjc/s10052-025-14965-6)
+
+If you use this code in academic work, please cite the article above.
+
+---
+
 ## Authors and Contact
 - **Francesco Borra** <br> Email: francesco.borra@uniroma3.it
 
