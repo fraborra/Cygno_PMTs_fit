@@ -105,7 +105,6 @@ void runAssociationFit(const Config config) {
     bool write_chains = config.write_chains;
     bool write_log = config.write_log;
     bool print_summary = config.print_summary;
-    int nPoints = config.nPoints;
     double c1 = 1;
     double c2 = config.c2 / config.c1;
     double c3 = config.c3 / config.c1;
@@ -149,8 +148,8 @@ void runAssociationFit(const Config config) {
 
     // ==================================== START =========================//
     // Setting chains parameters
-    int Nch = 6;                 // number of parallel MCMC chains
-    int NIter = nPoints * 10000; // number of step per chain
+    int Nch = 6;       // number of parallel MCMC chains
+    int NIter = 10000; // number of step per chain
 
     // BEGIN OF THE FIT LOOP
     for (int index = start_ind; index < end_ind; index++) {

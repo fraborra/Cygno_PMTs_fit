@@ -33,8 +33,6 @@ Config readConfigFile(const std::string &filename) {
                 config.start_ind = std::stoi(value);
             else if (key == "end_ind")
                 config.end_ind = std::stoi(value);
-            else if (key == "nPoints")
-                config.nPoints = std::stoi(value);
             else if (key == "output_file")
                 config.output_file = value;
             else if (key == "plot")

@@ -115,7 +115,6 @@ void runCalibrationFit(const Config config) {
     std::string input_file = config.input_file;
     int start_ind = config.start_ind;
     int end_ind = config.end_ind;
-    int nPoints = config.nPoints;
     std::string output_tag = config.calibration_output_tag;
     bool plot = config.plot;
 
@@ -136,7 +135,7 @@ void runCalibrationFit(const Config config) {
     }
     res_dir += "/";
 
-    // loop over the nPoints points to store data
+    // loop over the points to store data
     for (int point = start_ind; point < end_ind; point++) {
         // HERE I NORMALIZE THE Li USING SC_INTEGRAL, SO THAT IF THE LY IS NOT
         // CONSTANT IS ALL GOOD
@@ -157,7 +156,8 @@ void runCalibrationFit(const Config config) {
     BCLog::OpenLog("./logs/calibration_log.txt", BCLog::detail, BCLog::detail);
 
     // INITIALIZE THE MODEL
-    PMTcalibration cal(mode, Nch, end_ind, L1, L2, L3, L4, x, y);
+    int nPoints = end_ind - start_ind;
+    PMTcalibration cal(mode, Nch, nPoints, L1, L2, L3, L4, x, y);
 
     // Setting MCMC algorithm and precision
     cal.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);

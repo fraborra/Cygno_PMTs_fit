@@ -152,8 +152,10 @@ void runFindAlphaFit(const Config config) {
     // Create log
     BCLog::OpenLog("./logs/findalpha_log.txt", BCLog::detail, BCLog::detail);
 
+    int nPoints = end_ind - start_ind;
+
     // INITIALIZE THE MODEL
-    PMTfindalpha alpha(mode, Nch, end_ind, L1, L2, L3, L4, x, y, c_list);
+    PMTfindalpha alpha(mode, Nch, nPoints, L1, L2, L3, L4, x, y, c_list);
 
     // Setting MCMC algorithm and precision
     alpha.SetMarginalizationMethod(BCIntegrate::kMargMetropolis);
