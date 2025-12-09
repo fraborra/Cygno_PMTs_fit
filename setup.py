@@ -50,7 +50,12 @@ def find_bat():
 
 BAT_INCLUDE, BAT_LIB = find_bat()
 
-include_dirs = [local_pybind11, "src/", pybind11.get_include(), BAT_INCLUDE]  # fallback
+include_dirs = [
+    local_pybind11,
+    "src/",
+    pybind11.get_include(),  # fallback
+    BAT_INCLUDE,
+]
 
 ext_modules = [
     Extension(

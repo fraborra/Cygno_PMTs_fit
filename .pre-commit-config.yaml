@@ -5,7 +5,8 @@ repos:
     rev: v21.1.7
     hooks:
       - id: clang-format
-        args: ["-style=file", "--assume-filename", "dummy.cpp"]
+        args: ["-style=file", "--assume-filename", "dummy.cpp", "--style={BasedOnStyle: LLVM, IndentWidth: 4}"]
+        exclude: ^external/.*$
 
 # # clang-tidy via mirror pre-commit (SSH)
 #   - repo: git@github.com:conda-incubator/pre-commit-mirrors-clang-tidy.git

@@ -23,43 +23,8 @@
 #include "PMT_association.hpp"
 #include "helper_lib.hpp"
 
-// class PMTSingleEvent : public PMTassociation {
-// public:
-//   PMTSingleEvent(const std::string &mode, int nth, double *L, double *c_tmp);
-
-//   ~PMTSingleEvent() {};
-
-// private:
-//   double Lmax = 40000; // The smaller the smaller the parameter space --> can
-//   be
-//                        // changed if needed if trying to fit higher energy
-//                        // spot/longer integrals must be modified!
-//   double c[4] = {1.};
-
-//   std::string mode_;
-
-//   // PMT positions (in cm)
-//   double x1 = 2.3;
-//   double y1 = 30.7;
-
-//   double x2 = 30.7;
-//   double y2 = 30.7;
-
-//   double x3 = 30.7;
-//   double y3 = 2.3;
-
-//   double x4 = 2.3;
-//   double y4 = 2.3;
-
-//   double zGEM = 19;
-
-//   double data[4] = {0.};
-// };
-
 SinglePointResult runSingleEvent(const double q_values[4],
                                  const double calib[4], int NIterPrerun,
                                  int NIter, bool second_round);
-
-void saveSingleEventResults(const SinglePointResult results);
 
 #endif /* PMT_singleEvent_hpp */
